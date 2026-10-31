@@ -1,0 +1,32 @@
+# Local credentials and configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Runtime logs and temporary files
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Local editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Keep datasets out of Git; retain sample-data documentation
+/sample-data/*
+!/sample-data/*.md
+
+# Local archives and benchmark outputs
+*.zip
+*.7z
+*.tar
+*.gz
+/benchmark-results/
