@@ -68,3 +68,7 @@ Do not commit real logs, datasets, `.env`, API keys, or private configuration. N
 ## License
 
 [MIT](LICENSE).
+
+## Chunk 2 — data contract status
+
+No organizer samples are available in the workspace. [Dataset analysis](docs/dataset-analysis.md) records the inspection scope and required inputs. [Data contract requirements](docs/data-contract.md) define provenance, uncertainty, versioning, validation and bounded-batch requirements. [Field mappings](docs/field-mappings.md) and [schema definitions](schemas/README.md) remain pending actual sample inspection; no canonical event schema or event-validation tests have been invented. Chunk 1 behavior remains unchanged.
