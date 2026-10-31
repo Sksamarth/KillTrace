@@ -1,5 +1,29 @@
 # Canonical security event contract v1.0.0
 
+## Current source-specific extension: FireX 2.1.0
+
+The historical v1 contract below remains unchanged. Canonical 2.1.0 and source
+profile `firex-kv-1.0.0` now describe typed projections from the authorized FireX
+key/value sample. Python definitions are in `backend/app/contracts/firex_v21.py`;
+published event/validation schemas are under `schemas/v2.1/`. Source mappings and
+observed sample coverage are documented in field-mappings.md and dataset-analysis.md.
+
+This profile is distinct from generic key-value v2.0.0: it validates/promotes
+endpoints, account name, category/type/action and recognized login outcome.
+Original fields and decoded message stay intact, with raw evidence referenced by
+file hash, byte span and record hash. All promoted fields support absence; invalid
+addresses/ports produce partial outcomes, malformed framing/encoding rejects,
+and timestamp uncertainty remains explicit. Observer identity is not promoted
+to an affected host. Numeric-looking eventtime retains its original precision
+without epoch-unit guessing. Source-supplied alerts remain source information.
+
+Schema and transformation versions participate in normalization identity; source
+occurrence identity remains independent of normalization version. Different byte
+locations retain duplicate occurrences. The Arrow columns can represent this
+schema without adding unbounded fields, but readers must explicitly dispatch
+2.1.0 validation. Phase 3 owns storage/worker integration; this phase only defines
+and validates the source contract. Existing completed jobs are not migrated.
+
 ## Scope and source evidence
 
 This contract is derived from the actual local 1 GiB JSONL file generated at the user's request from their Mitigata SimEDR 1.0 script. It is a **synthetic-source contract**, not an assertion about undisclosed organizer production logs. See [dataset analysis](dataset-analysis.md) for measured coverage and [field mappings](field-mappings.md) for every observed path. The generator's alert and ATT&CK metadata are simulated source annotations; KillChain AI does not produce or verify detections in this chunk.

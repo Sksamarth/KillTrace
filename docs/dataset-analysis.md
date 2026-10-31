@@ -1,4 +1,40 @@
-# Dataset analysis — synthetic SimEDR JSONL
+# Dataset analysis
+
+## FireX source audit (master Phase 2)
+
+The user supplied `data/firex-10G.log`, actually 6,543,120,032 bytes. It is
+line-oriented quoted key=value text, not a JSON schema. The existing full JSONL
+conversion preserved 12,398,551 records without parsing issues; that is not a
+complete semantic validation. A bounded prefix sample of 1,000 records, 525,485
+bytes, was separately checked against canonical 2.1.0: **1,000 valid**, no partial
+or rejected records, and no identical raw-record hashes within the sample.
+Sample SHA-256: `872d9d2be7a87977058b0bd66049afca5f0e1c634ead97f25f9e849ede619f97`.
+
+All 1,000 decoded strictly as UTF-8 and supplied date/time/explicit tz, eventtime,
+devname/devid, logid, type/subtype, level, vd and action. The observed timestamp
+syntax includes `2026-10-23 08:48:26 +0530`; eventtime is preserved as a string
+without assuming its epoch unit. Source and destination IPs appeared in 940
+records; ports in 778; user in 151; hostname in 95; source attack annotations in
+27 and virus in 13. Missing fields are source-family differences, not invented
+empty entities. Process/PID/parent information was not available in this sample.
+Device names identify the reporting observer; hostname may describe a requested
+network destination, so neither is automatically declared an affected host.
+logid is preserved as a source event code, not assumed globally unique.
+
+The observed fields also include interfaces/roles, sessionid, proto, policyid,
+service, countries, app/appcat/apprisk, duration, byte/packet counters, logdesc,
+ui/method/status/reason/msg, url/catdesc, attack/attackid/severity and virus.
+These unpromoted fields retain original strings. Source annotations do not become
+verified attacks. No planted sequence or access-permission topology was provided.
+
+Reproduce aggregate inspection without printing private field values:
+`PYTHONPATH=backend python scripts/inspect_firex_contract.py data/firex-ingestion-sample.log`.
+The script streams hashing/records and caps duplicate tracking at 10,000 inspected
+records. No full-file duplicate or field-distribution claim follows from this
+bounded prefix. The validator and schema tests include deliberately malformed
+synthetic records; zero malformed real sample rows does not eliminate that case.
+
+## Historical synthetic SimEDR inspection
 
 ## Source and scope
 

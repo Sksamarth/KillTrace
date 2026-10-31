@@ -1,5 +1,30 @@
 # SimEDR JSONL → canonical v1.0.0 field mappings
 
+## Additional FireX mapping: canonical 2.1.0
+
+Profile `firex-kv-1.0.0`, transformation `firex-kv/1.0.0` is independently defined
+in `backend/app/contracts/firex_v21.py`; it does not reinterpret existing v1/v2 jobs.
+
+| Source field | Canonical projection |
+| --- | --- |
+| date + time + tz | timestamp.raw adapter ISO representation; timestamp.utc only with validated explicit offset; originals retained |
+| srcip / dstip | source.ip / destination.ip after strict IP validation |
+| srcport / dstport | source.port / destination.port after decimal/range validation |
+| user | user.name; no account domain inferred |
+| type / subtype / action | event.category / event.type / event.action; unknown strings preserved |
+| status for type=event, action=login | failed → failure; success → success; other values leave event.outcome unset |
+| devid / devname | source_fields.fields observer identifiers; not host identity |
+| eventtime / logid / sessionid / hostname and all others | source_fields.fields with original spelling and string precision |
+
+Every original field remains in source_fields.fields and the decoded line remains
+in source_fields.message. Missing fields remain absent there; typed projections
+are null. Invalid IP/port fields are retained but omitted from typed endpoints and
+listed as validation issues. Invalid/uncertain timestamps retain their state.
+Malformed encoding/framing or evidence mismatches reject with an explicit reason.
+Original bytes are authoritative via file/hash/record/span. Repeated identical
+bytes at different source offsets retain distinct occurrence identities. The
+reporting observer is not equated with the source IP, destination host or user.
+
 ## Scope and rules
 
 Source profile `simedr-json-1.0.0`, transformation `simedr-json/1.0.0`, canonical `1.0.0`. These mappings derive from the fully inspected local synthetic JSONL artifact documented in [dataset analysis](dataset-analysis.md), plus 21 real synthetic record byte excerpts in `backend/tests/fixtures/simedr_records.json`. No external organizer schema is assumed.

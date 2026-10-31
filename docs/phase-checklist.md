@@ -59,7 +59,10 @@ and needs to be reconciled with the newly required separate phase commits. Do no
 delete it or commit it as Phase 1 foundation work. Local synthetic findings are
 not organizer ground truth; no full causal attack reconstruction is established.
 
-- [ ] Phase 2: audit existing v1/v2 artifacts and mappings against all new contract requirements.
+- [x] Phase 2: preserve v1/v2; add explicit FireX canonical 2.1.0 definitions,
+  published schemas, field mappings, malformed/missing/duplicate tests and actual
+  1,000-record sample validation. Full workspace regression: 108 passed. Ingestion
+  wiring of the new profile belongs to Phase 3, not this contract change.
 - [ ] Phase 3: verify existing ingestion against the audited contract and commit its gate evidence.
 - [ ] Phase 4: complete full rule metadata, versioned ATT&CK catalog, mapping explanations,
   detection filters/dashboard and evaluation cases; commit before Phase 5.

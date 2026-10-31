@@ -16,6 +16,11 @@ def export(directory: Path):
     newer.mkdir(exist_ok=True)
     (newer / "event.schema.json").write_text(json.dumps(CanonicalLogEvent.model_json_schema(), indent=2) + "\n", encoding="utf-8")
     (newer / "validation.schema.json").write_text(json.dumps(LogValidation.model_json_schema(), indent=2) + "\n", encoding="utf-8")
+    from app.contracts.firex_v21 import FirexEvent, FirexValidation
+    firex = directory.parent / 'v2.1'
+    firex.mkdir(exist_ok=True)
+    for name, model in [('event.schema.json', FirexEvent), ('validation.schema.json', FirexValidation)]:
+        (firex / name).write_text(json.dumps(model.model_json_schema(), indent=2)+'\n', encoding='utf-8')
 
 
 if __name__ == "__main__":
