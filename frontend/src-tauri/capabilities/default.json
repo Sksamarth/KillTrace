@@ -1,0 +1,9 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Shell phase: no filesystem, shell execution or remote IPC permissions",
+  "windows": [
+    "main"
+  ],
+  "permissions": []
+}

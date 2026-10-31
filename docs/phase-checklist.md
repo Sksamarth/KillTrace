@@ -1,5 +1,20 @@
 # Master development phase checklist
 
+## Revised Windows desktop target
+
+The latest user prompt adds Tauri 2, a packaged Python sidecar, native file
+selection and a Windows installer. The older web-phase checklist below is
+historical evidence, not completion of the new desktop requirements. See
+desktop-architecture.md for the adopted lifecycle/security design and phase gates.
+
+- Desktop Phase 1 shell: implemented, compiled and rendered in a native Windows
+  window with a live API connection. Locked Rust check, frontend build/security
+  test and 109 backend tests pass. User Escape stopped Help-menu inspection;
+  About and close/reopen verification remain pending. Phase not fully complete.
+- Standalone backend startup, secure IPC, native path grants and installer:
+  not packaged or qualified yet. Existing ingestion/contracts and the separate
+  investigation draft are preserved.
+
 Updated 31 October 2026 after receiving the seven-phase master prompt.
 This checklist distinguishes historical deliveries from completion under the new
 gates. No seven-phase completion is claimed.
