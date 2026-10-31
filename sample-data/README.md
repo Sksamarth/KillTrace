@@ -1,6 +1,6 @@
 # Sample data
 
-No sample logs or datasets are included. No synthetic incident events have been generated.
+No bulk sample logs or datasets are committed here. A user-requested 1 GiB synthetic SimEDR JSONL file was generated locally under ignored `data/`; 21 small clearly labeled synthetic byte excerpts are versioned under `backend/tests/fixtures/` for contract tests. Supplied simulated alerts are source metadata, not KillChain AI detection results.
 
 This directory is reserved for future authorized, appropriately sanitized examples after formats and evaluation requirements are finalized. Large datasets should remain outside Git; document their provenance and retrieval instructions when approved for use.
 

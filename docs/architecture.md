@@ -2,7 +2,7 @@
 
 ## Scope and implemented foundation
 
-The implementation exposes only `GET /api/health`, OpenAPI documentation, and a React shell showing real API connectivity. Pydantic validates storage resource settings. A tested factory opens an on-disk DuckDB database without creating any application tables. Docker Compose defines loopback-only frontend/backend services and persistent storage. Detection and analysis dependencies are installed but unused. No event schema is assumed.
+The implementation exposes only `GET /api/health`, OpenAPI documentation, and a React shell showing real API connectivity. Pydantic validates storage resource settings. A tested factory opens an on-disk DuckDB database without creating any application tables. Docker Compose defines loopback-only frontend/backend services and persistent storage. Detection and analysis dependencies are installed but unused. Chunk 2 adds a versioned source-specific contract derived from an inspected synthetic SimEDR JSONL file; no undisclosed source schema is assumed.
 
 ## Proposed processing architecture
 
@@ -19,7 +19,7 @@ Only the API/UI shell and storage connection factory exist today. The worker, jo
 
 ## Dataset contract remains open
 
-Before ingestion, inspect authorized representative samples, formats, encodings, timestamp/timezone semantics, entity identifiers, data sensitivity, and source provenance. Define source-specific adapters and a versioned canonical contract from that evidence. Missing fields and ambiguous times must be recorded rather than invented. Preserve evidence references and transformation versions. No schema, parser, source upload, or conversion is delivered in this chunk.
+Before ingestion, inspect authorized representative samples, formats, encodings, timestamp/timezone semantics, entity identifiers, data sensitivity, and source provenance. Define source-specific adapters and a versioned canonical contract from that evidence. Missing fields and ambiguous times must be recorded rather than invented. Preserve evidence references and transformation versions. The foundation delivered no event schema. Chunk 2 now provides a single-record JSONL validator and versioned Arrow/Parquet contract for the inspected synthetic source only. Bulk ingestion, source upload and production adapters remain unimplemented. See [data contract](data-contract.md) and [dataset analysis](dataset-analysis.md).
 
 ## Resource strategy for Ryzen 5 / 8 GB / no GPU
 

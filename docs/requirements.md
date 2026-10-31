@@ -1,6 +1,6 @@
 # Requirements
 
-**Status:** all functional requirements below are planned and unimplemented. Validation criteria describe future work; foundation tests exist; no analysis benchmarks exist.
+**Status:** all functional requirements below are planned and unimplemented. Validation criteria describe future work; foundation and source-contract tests exist; no analysis benchmarks exist.
 
 ## A. Detect and Label
 
@@ -47,3 +47,7 @@ No throughput, completion time, hardware configuration, or memory ceiling is pro
 - Keep credentials and datasets out of Git.
 - Design for disk-backed processing and bounded memory on an 8 GB laptop.
 - Treat analysis features and dataset-size goals as future work until validated.
+
+## Chunk 2 boundaries
+
+The user-supplied synthetic SimEDR generator was used to create and inspect a local 1 GiB JSONL file. The v1 contract, mappings and validation tests cover that observed source only. Source-provided simulated alert tags remain annotations. A real organizer/5 GB source still requires independent profiling and mapping review. No complete ingestion engine, security detections or performance benchmarks are delivered.

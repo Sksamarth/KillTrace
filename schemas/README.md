@@ -1,7 +1,12 @@
-# Canonical schema definitions — awaiting samples
+# Versioned security event schemas
 
-No canonical event schema version is published. There are no Pydantic event models, JSON Schema definitions or Arrow schemas in this directory because no organizer dataset was provided for inspection.
+The v1.0.0 contract is derived from the actual locally generated synthetic SimEDR JSONL file. It does not establish a schema for unprovided organizer sources.
 
-The future first approved contract will be versioned v1. Its definitions, source mappings, transformation versions and executable validation tests must be released together after sample analysis. Reserving this directory does not establish a schema or imply completed validation.
+- [Canonical event JSON Schema](v1/event.schema.json)
+- [Validation outcome JSON Schema](v1/validation.schema.json)
+- [Arrow/Parquet schema](v1/arrow-schema.txt)
+- [Contract semantics](../docs/data-contract.md)
+- [Source mappings](../docs/field-mappings.md)
+- [Dataset inspection](../docs/dataset-analysis.md)
 
-See [data contract requirements](../docs/data-contract.md), [dataset analysis](../docs/dataset-analysis.md) and [mapping status](../docs/field-mappings.md).
+Python source of truth: `backend/app/contracts/v1.py` and `arrow_v1.py`. Regenerate artifacts from the repository root with `PYTHONPATH=backend python scripts/export_contract.py` (POSIX) or `$env:PYTHONPATH='backend'; .\.venv\Scripts\python scripts/export_contract.py` (PowerShell). Tests check artifact consistency and storage round trips. Unknown schema versions are rejected; source-specific extra fields are retained under `source_fields` rather than silently accepted as canonical columns.

@@ -69,6 +69,22 @@ Do not commit real logs, datasets, `.env`, API keys, or private configuration. N
 
 [MIT](LICENSE).
 
-## Chunk 2 — data contract status
+## Chunk 2 - synthetic dataset and data contract
 
-No organizer samples are available in the workspace. [Dataset analysis](docs/dataset-analysis.md) records the inspection scope and required inputs. [Data contract requirements](docs/data-contract.md) define provenance, uncertainty, versioning, validation and bounded-batch requirements. [Field mappings](docs/field-mappings.md) and [schema definitions](schemas/README.md) remain pending actual sample inspection; no canonical event schema or event-validation tests have been invented. Chunk 1 behavior remains unchanged.
+A 1 GiB JSONL test file was generated locally from the user-supplied Mitigata SimEDR script and fully inspected. All rows are synthetic; supplied alert and ATT&CK tags are simulated source metadata, not detections produced by KillChain AI. The logfile, generation manifest and full profiling report are under ignored `data/` and are not committed. Only 21 small explicitly synthetic test excerpts are versioned.
+
+- [Dataset analysis](docs/dataset-analysis.md): full-file findings, field inventory and limitations.
+- [Canonical v1 contract](docs/data-contract.md): provenance, uncertainty, validation and memory limits.
+- [Source mappings](docs/field-mappings.md): all observed paths, including unpromoted source fields.
+- [Versioned schema artifacts](schemas/README.md): JSON Schema and explicit Arrow/Parquet layout.
+
+The Python contract validates one bounded record and supports fixture-scale Parquet round trips. No bulk ingestion pipeline or detection engine is implemented. Optional CEF/syslog/HTTP output from the pasted script was not generated or validated. A future organizer/5 GB sample needs independent inspection before reuse of this profile.
+
+To create another local 1 GiB synthetic file (the generator refuses to overwrite existing files):
+
+```powershell
+.\.venv\Scripts\python scripts/generate_sample.py --output data/another-simedr-1gib.jsonl
+.\.venv\Scripts\python scripts/profile_sample.py data/another-simedr-1gib.jsonl --report data/another-simedr-1gib.profile.json
+```
+
+The byte target is 1,073,741,824; generation finishes the last complete record, so actual size can exceed it slightly. The seed controls random choices, not UUIDs/timestamps. Inspection uses capped per-record reads and disk-backed duplicate indexes. Run the existing backend test command above; see the contract for schema-artifact export instructions.

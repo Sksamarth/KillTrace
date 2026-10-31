@@ -1,65 +1,85 @@
-# Data contract — design gate
+# Canonical security event contract v1.0.0
 
-Status: blocked on actual authorized samples. No canonical event schema version has been issued. This document defines requirements for the future contract; it is not a field schema and must not be used to normalize logs.
+## Scope and source evidence
 
-See [dataset analysis](dataset-analysis.md), [field mapping status](field-mappings.md), and [schema status](../schemas/README.md). Chunk 1 runtime behavior remains unchanged.
+This contract is derived from the actual local 1 GiB JSONL file generated at the user's request from their Mitigata SimEDR 1.0 script. It is a **synthetic-source contract**, not an assertion about undisclosed organizer production logs. See [dataset analysis](dataset-analysis.md) for measured coverage and [field mappings](field-mappings.md) for every observed path. The generator's alert and ATT&CK metadata are simulated source annotations; KillChain AI does not produce or verify detections in this chunk.
 
-## Contract approval and versioning
+Python definitions: `backend/app/contracts/v1.py`. Versioned JSON Schema artifacts: [event](../schemas/v1/event.schema.json) and [validation result](../schemas/v1/validation.schema.json). Arrow definition: `backend/app/contracts/arrow_v1.py`; [readable schema](../schemas/v1/arrow-schema.txt). Python is the source of truth; tests detect stale generated artifacts.
 
-First inspect each real source, then define a canonical v1 contract with explicit types, nullability, identifier semantics and mappings. Publish immutable versioned schema definitions, corresponding Pydantic validation and an explicit Arrow/Parquet representation together. Record the canonical schema version and transformation/adapter version for each output event and in each output artifact manifest. A transformation change must not silently reuse an old version.
+## Structure
 
-Separate source schema versions from canonical schema versions. Reject unsupported canonical versions explicitly. Define compatibility and migration rules before release: incompatible changes require a new major contract; additions require explicit reader behavior and validated defaults/nullability. Do not silently accept misspelled canonical keys as extensions. Future extensions need a namespaced, typed and bounded representation whose contents are based on observed sources.
-
-## Evidence and provenance requirements
-
-These are processing metadata requirements, not claims about columns in the organizer dataset.
-
-| Traceability requirement | Required behavior for the future design |
+| Canonical field | Meaning and null behavior |
 | --- | --- |
-| Original file | Retain an immutable artifact reference, original name/path in a private manifest, size and cryptographic content digest. Paths alone cannot identify unchanged evidence. |
-| Original record or line | Select a locator appropriate to the observed format: byte span, logical record index, native record ID, archive member, and/or line range. Define index base and byte-range boundaries. Never equate a logical record with a physical line without checking framing. |
-| Source identifier | Use a documented organizer/collector identity when available; otherwise assign an ingestion-managed identity and mark its origin. Do not invent a host identity from a file name. |
-| Ingestion batch | Assign a processing batch identifier and persist its manifest/checkpoint relationship. It is processing metadata, not an original event field. |
-| Transformation version | Record adapter/ruleset identity and immutable version plus source and target contract versions. Retain timestamp and identifier conversion decisions. |
-| Raw evidence | Preserve original bytes in restricted immutable storage and retain a retrievable locator and digest. A parsed/re-serialized object is not the original byte evidence. |
+| `schema_version` | Literal `1.0.0`, materialized on output |
+| `source_profile` | Literal `simedr-json-1.0.0`; never silently applied to other sources |
+| `provenance` | Required artifact/record/batch/transformation metadata defined below |
+| `source_record_id` | SHA-256 source-occurrence identity derived from provenance |
+| `normalization_id` | SHA-256 source-occurrence + schema + transformation identity |
+| `timestamp` | Required uncertainty object: original string, state and nullable UTC instant |
+| `event` | Optional id/kind/category/type/action/severity/outcome/module/dataset; arrays stay arrays |
+| `host` | Optional name/hostname, address array, OS type and full description |
+| `user` | Optional account name/domain; no inferred SID, account ID, or host association |
+| `process` | Optional PID/name/executable/command line/entity ID, parent PID/name and source hashes |
+| `source`, `destination` | Optional IP/port/domain endpoints; missing endpoints stay null |
+| `dns_resolved_ips` | Optional array from observed DNS resolved addresses |
+| `source_fields` | Original parsed JSON object including all mapped, unpromoted and future source fields |
 
-Compressed or container formats may require both original-container references and a derived immutable member artifact with its own digest and locator. Preserve their relationship. Raw bytes must remain recoverable for decode failures, malformed records and unknown event types. Do not repeatedly inline entire source files into every event. Evidence retention, access control and deletion must be coordinated so references cannot silently outlive the evidence.
+All observation fields are optional even where this generated file always contains them. Missing and explicit-null normalized values may both be null, but `source_fields` preserves the distinction. Empty strings and arrays are not turned into missing values. Unknown canonical keys fail validation; future source-specific keys remain in `source_fields`. No kill-chain stage, risk score, inferred process lineage, prediction or detection field is invented.
 
-Distinguish a source-record identity, an ingestion occurrence and a content fingerprint when the contract is designed. Identical content is not sufficient evidence that two occurrences are the same event. Replay identity should depend on stable source artifact/record references and the relevant transformation version, not batch identity alone. Deduplication must preserve occurrence provenance and must not silently discard evidence. Exact identity algorithms remain unapproved until record framing is known.
+Severity is the source's integer 0–10, not a calibrated probability or detection confidence. Event kinds/categories/types/actions/outcomes are bounded strings, not a closed vocabulary; new source types are retained. PIDs are nonnegative signed-64-bit values; ports are 0–65535; IP validation accepts IPv4 and IPv6 even though this file contains only IPv4. Synthetic hashes are carried as source strings, never treated as file-content verification.
 
-## Missing information and uncertainty
+## Evidence and provenance
 
-Do not require host, user, address, process or event-type fields merely because they are useful for analysis. Determine their existence and meaning per source. Preserve the distinction between absent, explicit null, empty, invalid and unrecognized input through a documented validation outcome. Never substitute invented identifiers or an epoch timestamp for missing information.
+Every validation result, including rejection, contains:
 
-Preserve original timestamp evidence and parsing decisions. Normalize to UTC only when the source provides an offset or there is documented, versioned timezone context. Do not infer timezone from the developer laptop or file modification time. Offset-free values, daylight-saving ambiguity, impossible dates, conflicting timestamps, precision loss and clock uncertainty need explicit outcomes. Ingestion time must not replace occurrence time. Select Arrow timestamp units and precision rules only after examining samples; preserve evidence if conversion would lose precision.
-
-Unknown source event types should retain their original vocabulary and provenance without receiving an invented security label. Invalid timestamps, invalid addresses and malformed records must retain raw evidence and a reasoned validation outcome. Do not decide whether a source field contains an IP address until its semantics are verified. Define reject/quarantine versus partial-normalization behavior per source before implementing adapters.
-
-## Schema validation plan — not yet implemented
-
-No executable event-schema tests are supplied because no source-derived event schema exists. Existing foundation tests do not validate organizer logs. Future sanitized fixtures must come from authorized observed records or be clearly labeled isolated validator inputs derived from the approved contract; never present test inputs as organizer observations.
-
-| Case | Acceptance requirement once the contract exists |
+| Metadata | Contract |
 | --- | --- |
-| Valid events | Each approved source maps to the expected canonical values, provenance and transformation versions; validate Pydantic and Arrow/Parquet round trips. |
-| Missing fields | Observed optional omissions survive; required processing metadata failures are explicit; no fabricated defaults. |
-| Invalid timestamps | Preserve original value/evidence and an invalid outcome; do not coerce to a valid occurrence time. Test actual observed formats, offsets and ambiguity separately. |
-| Invalid IP addresses | Test IPv4/IPv6 and invalid values only for source fields verified to represent addresses; preserve invalid originals and diagnostics. |
-| Malformed records | Preserve evidence and locator with a framing/parse diagnostic; do not emit a fabricated successful event. |
-| Unknown event types | Retain unknown raw type without fabricated detection/mapping; follow the approved unknown-type policy. |
-| Duplicate records | Same-record replay is recognizable across batches; different source occurrences with identical content retain separate provenance; transformation-version changes remain distinguishable. |
-| Versions and extensions | Unsupported versions fail explicitly; unknown canonical keys cannot bypass validation; supported extensions obey type and size limits. |
+| `original_file` | Required original file reference (1–2048 characters); production manifests must resolve it to immutable, access-controlled evidence |
+| `artifact_sha256` | Lowercase SHA-256 of complete original file bytes |
+| `source_id` | Stable assigned source identity (1–256 characters); current source is user-supplied SimEDR synthetic telemetry, not a machine inferred from a filename |
+| `source_format` | Bounded format name; envelope can carry other formats, but this adapter accepts only `jsonl` |
+| `record_number` | One-based physical line/logical record for this JSONL source (signed-64-bit positive integer) |
+| `byte_offset` | Zero-based offset in the original uncompressed byte stream |
+| `byte_length` | Exact byte count including LF/CRLF delimiter when present; 1–1,048,576 |
+| `raw_sha256` | SHA-256 of that exact byte span, including delimiter |
+| `batch_id` | Processing UUID, not an original event ID |
+| `transformation_version` | Literal adapter identity `simedr-json/1.0.0` for this profile |
+| `synthetic` | Required true for this profile; all rows are synthetic, including baseline rows without source labels |
 
-Do not add passing placeholder tests, blanket skips, or generic event models to imply that these checks are complete.
+`validate_json_record` checks record length and digest against the supplied reference. The caller must verify the complete artifact hash and record locator against a trusted manifest; this function does not reread/hash a 1 GiB file per event or verify file ownership. A fabricated caller-supplied digest is not an authenticity guarantee. Preserve original bytes on disk. Parsed JSON or its Parquet serialization cannot reconstruct original whitespace, key ordering, escaping, BOMs or newlines.
 
-## 8 GB laptop and columnar-storage design
+For compressed/container sources, future profiles must specify original container/member references and byte-coordinate semantics. Do not apply this JSONL locator to CSV multiline or binary formats. No CEF adapter is implemented; the generic provenance envelope preserves references for unsupported formats, and validation returns `unsupported_source_profile` rather than guessing.
 
-The contract must support one-record validation followed by bounded Arrow record batches and Parquet row groups. Preserve nullability and enforce byte as well as row limits; a row count alone cannot bound memory when individual records or extension payloads are large. Define maximum record, field and nested-payload sizes after sample inspection, including an evidence-preserving oversized-record outcome. Never build a complete Python record list or DataFrame.
+## Duplicate and replay semantics
 
-Keep original evidence on disk and reference it from normalized rows. Future batch accounting must include decompression, parser buffers, variable-width Arrow arrays, dictionary cardinality and conversion copies. Flush or reject before exceeding the working-set budget. Bound distinct-value profiling and graph expansion separately. Partitioning, timestamp units, row-group sizing, compression and dictionary strategy remain decisions to validate against observed data; no hardcoded dataset columns are selected here.
+`source_record_id = SHA256(compact JSON [source_id, artifact_sha256, byte_offset, byte_length, raw_sha256])`, encoded as UTF-8. `normalization_id = SHA256(source_record_id + ':' + schema_version + ':' + transformation_version)`.
 
-Use the existing single-worker DuckDB/spill configuration as an initial resource setting, not proof of a process-wide memory limit. No Arrow conversion, Parquet writer, ingestion pipeline, resource enforcement or benchmark is delivered in this chunk.
+Replaying the same source occurrence in another batch yields the same identities. A separate byte occurrence containing identical content yields a different source-record ID. Transformation changes alter normalization identity but preserve source identity. Raw digest detects exact-byte equality; event IDs remain source values and are not trusted as global identity. No automatic deduplication/drop policy is implemented. The profiling tool checks exact byte-record digests and repeated source event IDs on disk; it does not establish semantic duplicate equivalence.
 
-## Completion gate
+## Timestamp uncertainty
 
-Chunk 2 data-dependent deliverables remain incomplete until authorized samples are supplied and inspected, observed source mappings are reviewed, immutable event schema versions are published, and the validation matrix above is implemented and passing. The current deliverable records that gap and the requirements for resolving it.
+Original timestamp strings remain available in `timestamp.raw` and `source_fields`. `known` requires a valid ISO timestamp with seconds, explicit `Z` or numeric offset and at most six fractional digits; UTC must agree exactly with the original instant. The observed generator uses three fractional digits and `Z`. UTC uses Arrow `timestamp[us, UTC]`, preserving the observed millisecond precision while allowing microseconds without truncation.
+
+`missing` has no raw/UTC value. Explicit source null additionally records `timestamp_explicit_null`. `invalid` preserves the original string and has no UTC instant. `offset_unknown` preserves a valid offset-free timestamp without assuming the laptop's timezone. Date-only strings, numeric epochs, impossible dates/offsets, and precision beyond microseconds are not guessed or truncated. Non-string/non-null timestamps reject the normalized event. No ingestion time substitutes for event time. The observed timestamps represent generation time; they do not establish a historical attack timeline or clock synchronization.
+
+## Validation outcomes
+
+`RecordValidation` v1.0.0 returns `valid`, `partial` or `rejected`, with provenance and bounded issue codes. A valid event has no issues; partial events have timestamp uncertainty issues; rejected records have issues and no fabricated normalized event.
+
+Strict UTF-8 and JSON parsing reject bad encodings, non-object records, duplicate JSON keys and nonstandard NaN/Infinity constants. Wrong mapped field types, invalid addresses, invalid ports or out-of-range severity reject the event while retaining the raw reference. There is no scalar-to-array or numeric-string coercion. Fields not promoted to typed observations are preserved as bounded JSON source fields; their semantic validity is not claimed. Generic rejection codes avoid echoing potentially sensitive values.
+
+Tests use 21 actual synthetic record byte excerpts spanning action/type/outcome/source-rule/OS combinations found within the first 10,000 rows. Explicit test mutations cover missing fields, nulls, invalid timestamps, timezone uncertainty, IPv4/IPv6, malformed records, unknown types, duplicates/replays, provenance mismatch, unsupported profiles, versions, bounds and Parquet round trips. Mutations are validator inputs, not findings about the generated file.
+
+## Bounded Arrow and Parquet storage
+
+The explicit Arrow schema uses nullable structs/lists rather than inferring schema from each batch. UUIDs/IP addresses/digests are strings; byte locators and PIDs are signed 64-bit integers. `source_fields` is stored as `source_fields_json: large_string`, a semantic JSON copy, avoiding a dynamic wide Parquet schema. Known normalized fields remain typed/queryable. Reader helpers revalidate rows against v1. Parquet metadata records schema/source-profile versions and synthetic status. Validation-result JSON retains rejection/partial outcomes; a future writer must persist those outcomes separately from normalized events.
+
+Single-record input is capped at 1 MiB, normalized strings at 65,536 characters, normalized string/IP arrays at 256 entries, and serialized `source_fields` at 2 MiB. These are defensive initial limits, not observed dataset maxima or throughput claims. A future bounded reader must enforce the input limit before decoding/allocating and preserve an oversized record's external evidence reference in a separate rejection manifest; current provenance cannot represent a record larger than 1 MiB. Never truncate evidence to make it valid.
+
+Future batching should flush at the first of a row cap or byte cap (initial design targets: 8,192 rows or 16 MiB of estimated payload), then measure real RSS including JSON, Arrow and conversion copies before tuning. No batcher, Parquet dataset writer, ingestion job system or resource guarantee is implemented. Tiny bounded fixture tables in tests verify storage compatibility only. Keep full evidence on disk, retain the existing 1 GB DuckDB/two-thread initial settings, and leave memory for Windows/editor/browser. Full-dataset duplicate checks use an 8 MiB SQLite page cache and disk indexes instead of Python sets. No complete dataset is loaded into Pandas or Python lists.
+
+## Version policy and next source
+
+Versioned artifacts are published together with transformation and mapping definitions. Breaking field, type or semantic changes require a new major contract and explicit migration. A new additive minor version also requires reader/schema agreement; v1 readers reject unsupported version literals. Re-export artifacts with `$env:PYTHONPATH='backend'; .\.venv\Scripts\python scripts/export_contract.py` in PowerShell.
+
+This release covers the generated JSONL profile only. The supplied script describes optional CEF and syslog/HTTP outputs, but none was generated or inspected. Its CEF formatter is lossy; it must have its own samples, mapping and parser tests before support is advertised. The organizer's future 5 GB sample must be profiled and compared against this source profile before reuse; no assumption of identical fields is permitted. No performance or detection benchmark is claimed.

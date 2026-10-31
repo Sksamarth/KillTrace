@@ -1,0 +1,69 @@
+schema_version: string not null
+source_profile: string not null
+provenance: struct<original_file: string, artifact_sha256: string, source_id: string, source_format: string, rec (... 145 chars omitted) not null
+  child 0, original_file: string
+  child 1, artifact_sha256: string
+  child 2, source_id: string
+  child 3, source_format: string
+  child 4, record_number: int64
+  child 5, byte_offset: int64
+  child 6, byte_length: int64
+  child 7, raw_sha256: string
+  child 8, batch_id: string
+  child 9, transformation_version: string
+  child 10, synthetic: bool
+source_record_id: string not null
+normalization_id: string not null
+timestamp: struct<raw: string, state: string, utc: timestamp[us, tz=UTC]> not null
+  child 0, raw: string
+  child 1, state: string
+  child 2, utc: timestamp[us, tz=UTC]
+event: struct<id: string, kind: string, category: list<item: string>, type: list<item: string>, action: str (... 71 chars omitted)
+  child 0, id: string
+  child 1, kind: string
+  child 2, category: list<item: string>
+      child 0, item: string
+  child 3, type: list<item: string>
+      child 0, item: string
+  child 4, action: string
+  child 5, severity: int32
+  child 6, outcome: string
+  child 7, module: string
+  child 8, dataset: string
+host: struct<name: string, hostname: string, ip: list<item: string>, os_type: string, os_full: string>
+  child 0, name: string
+  child 1, hostname: string
+  child 2, ip: list<item: string>
+      child 0, item: string
+  child 3, os_type: string
+  child 4, os_full: string
+user: struct<name: string, domain: string>
+  child 0, name: string
+  child 1, domain: string
+process: struct<pid: int64, name: string, executable: string, command_line: string, entity_id: string, parent (... 62 chars omitted)
+  child 0, pid: int64
+  child 1, name: string
+  child 2, executable: string
+  child 3, command_line: string
+  child 4, entity_id: string
+  child 5, parent_pid: int64
+  child 6, parent_name: string
+  child 7, hashes: map<string, string>
+      child 0, entries: struct<key: string not null, value: string> not null
+          child 0, key: string not null
+          child 1, value: string
+source: struct<ip: string, port: int32, domain: string>
+  child 0, ip: string
+  child 1, port: int32
+  child 2, domain: string
+destination: struct<ip: string, port: int32, domain: string>
+  child 0, ip: string
+  child 1, port: int32
+  child 2, domain: string
+dns_resolved_ips: list<item: string>
+  child 0, item: string
+source_fields_json: large_string not null
+-- schema metadata --
+killchain.schema_version: '1.0.0'
+killchain.source_profile: 'simedr-json-1.0.0'
+killchain.evidence: 'synthetic; raw bytes referenced, not reconstructed'

@@ -22,7 +22,7 @@ Observed events, inferred correlations, and potential future paths should remain
 
 ## Current repository contents
 
-FastAPI health service, React/TypeScript dashboard shell, a disk-backed DuckDB factory, resource configuration, tests, Docker Compose, and architecture documentation. No datasets or analysis features exist.
+FastAPI health service, React/TypeScript dashboard shell, a disk-backed DuckDB factory, resource configuration, tests, Docker Compose, and architecture documentation. A user-requested 1 GiB synthetic logfile exists locally under ignored data/, with an inspected source profile, v1 contract, source mappings and schema tests. No real organizer dataset or detection/analysis engine is included.
 
 ## Decisions still open
 
