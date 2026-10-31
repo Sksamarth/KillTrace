@@ -84,6 +84,9 @@ Start body: `{"source":"simedr-1gib.jsonl","source_profile":"simedr-json-1.0.0",
 
 ## Checks
 
+See [measured ingestion baseline and profiling instructions](docs/ingestion-performance.md)
+for the FireX sample timings and recommended optimization experiments.
+
 ```powershell
 .\.venv\Scripts\python -m pytest -c backend/pytest.ini backend/tests
 .\.venv\Scripts\python -m pip check
