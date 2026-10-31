@@ -63,7 +63,10 @@ not organizer ground truth; no full causal attack reconstruction is established.
   published schemas, field mappings, malformed/missing/duplicate tests and actual
   1,000-record sample validation. Full workspace regression: 108 passed. Ingestion
   wiring of the new profile belongs to Phase 3, not this contract change.
-- [ ] Phase 3: verify existing ingestion against the audited contract and commit its gate evidence.
+- [x] Phase 3: wire the explicit FireX profile into API/CLI, schema metadata and
+  Arrow reading; preserve all existing profiles and checkpoint behavior. Full
+  workspace suite: 109 passed. Actual 1,000-record sample accepted completely,
+  schema 2.1.0 Parquet, zero validation issues (job 51abb13d55704144b60ad3a23406c081).
 - [ ] Phase 4: complete full rule metadata, versioned ATT&CK catalog, mapping explanations,
   detection filters/dashboard and evaluation cases; commit before Phase 5.
 - [ ] Phase 5: complete incident/edge contracts and interactive graph/timeline requirements;

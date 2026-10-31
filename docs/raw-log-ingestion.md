@@ -1,5 +1,20 @@
 # Raw and server log ingestion
 
+## Typed FireX profile (master Phase 3)
+
+Select `firex-kv-1.0.0` / **FireX typed security logs** for the supplied FireX
+source. This sixth profile uses canonical 2.1.0 and transformation firex-kv/1.0.0,
+validates/promotes IPs, ports, account and event descriptors, and retains all raw
+fields/evidence. The generic key-value profile remains unchanged for unknown
+sources. See field-mappings.md for the explicit observed-source contract.
+CLI: `PYTHONPATH=backend python -m app.ingestion --source firex-10G.log --profile firex-kv-1.0.0`.
+No JSONL conversion is required. Existing jobs are not migrated or overwritten.
+
+Actual bounded-source check: the 1,000-record / 525,485-byte sample completed
+with all rows accepted, no issues and schema 2.1.0 Parquet. Tests cover duplicate
+occurrences, malformed framing, cancellation/resume and typed storage round trips.
+This does not establish full-file throughput, attack accuracy or 15/30/50 GB support.
+
 Five explicit profiles are now supported. Select the format in the UI, in API `source_profile`, or CLI `--profile`.
 
 | Profile | Scope |

@@ -15,7 +15,7 @@ class StartJob(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     source: str = Field(min_length=1, max_length=1024)
     source_id: str | None = Field(default=None, min_length=1, max_length=256)
-    source_profile: Literal["simedr-json-1.0.0", "raw-text-1.0.0", "web-combined-1.0.0", "key-value-1.0.0", "json-record-1.0.0"]
+    source_profile: Literal["simedr-json-1.0.0", "raw-text-1.0.0", "web-combined-1.0.0", "key-value-1.0.0", "json-record-1.0.0", "firex-kv-1.0.0"]
     synthetic: bool
 
     @model_validator(mode="after")

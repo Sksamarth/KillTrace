@@ -48,3 +48,27 @@ def test_published_schema_matches_models():
     directory=Path(__file__).resolve().parents[2]/'schemas'/'v2.1'
     for name,model in [('event.schema.json',FirexEvent),('validation.schema.json',FirexValidation)]:
         assert json.loads((directory/name).read_text())==model.model_json_schema()
+
+
+def test_ingestion_checkpoint_and_storage_roundtrip(tmp_path):
+    from app.config import Settings
+    from app.jobs import create_job, cancel, prepare_resume
+    from app.ingestion import run_job
+    from app.contracts.arrow_v1 import from_arrow_row
+    import pyarrow.parquet as pq
+    inputs=tmp_path/'input';inputs.mkdir()
+    raw=b'date=2026-10-23 time=08:48:26 tz=+0530 srcip=192.0.2.1 dstport=443 user=test type=traffic\n'
+    (inputs/'sample.log').write_bytes(raw+raw+b'bad framing\n')
+    settings=Settings(data_dir=tmp_path/'out',ingestion_input_dir=inputs)
+    work=create_job(settings,'sample.log',source_profile='firex-kv-1.0.0',synthetic=True)
+    cancel(settings,work.name)
+    assert run_job(work)['status']=='cancelled'
+    result=run_job(prepare_resume(settings,work.name))
+    assert result['status']=='completed' and result['records_accepted']==2 and result['records_rejected']==1
+    events=[]
+    for part in (work/'events').rglob('*.parquet'):
+        table=pq.ParquetFile(part).read()
+        assert table.schema.metadata[b'killchain.schema_version']==b'2.1.0'
+        events.extend(from_arrow_row(row) for row in table.to_pylist())
+    assert all(str(event.source.ip)=='192.0.2.1' for event in events)
+    assert len({event.source_record_id for event in events})==2

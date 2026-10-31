@@ -11,6 +11,7 @@ from pydantic import Field, model_validator
 from app.contracts.v1 import CanonicalEvent, ContractModel, EventFields, Endpoint, EventTime, Provenance, event_time, identities, MAX_RECORD_BYTES
 
 PROFILES = {"simedr-json-1.0.0": ("jsonl", "simedr-json/1.0.0"), "raw-text-1.0.0": ("text", "raw-text/1.0.0"), "web-combined-1.0.0": ("web-combined", "web-combined/1.0.0"), "key-value-1.0.0": ("key-value", "key-value/1.0.0"), "json-record-1.0.0": ("jsonl", "json-record/1.0.0")}
+PROFILES['firex-kv-1.0.0'] = ('key-value', 'firex-kv/1.0.0')
 
 
 class CanonicalLogEvent(CanonicalEvent):
@@ -72,6 +73,9 @@ def access_time(value):
 
 
 def validate_log_record(raw: bytes, provenance: Provenance, profile: str):
+    if profile == 'firex-kv-1.0.0':
+        from app.contracts.firex_v21 import validate_firex
+        return validate_firex(raw, provenance)
     def reject(code):
         return LogValidation(status="rejected", provenance=provenance, issues=[code])
     if len(raw) > MAX_RECORD_BYTES:

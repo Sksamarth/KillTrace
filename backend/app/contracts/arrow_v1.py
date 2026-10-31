@@ -51,6 +51,9 @@ def from_arrow_row(row: dict) -> CanonicalEvent:
         row["process"] = {**row["process"], "hashes": dict(row["process"]["hashes"])}
     # JSON mode preserves strict UUID/IP/datetime decoding rules across storage.
     model = CanonicalEvent
+    if row.get('schema_version') == '2.1.0':
+        from app.contracts.firex_v21 import FirexEvent
+        model = FirexEvent
     if row.get("schema_version") == "2.0.0":
         from app.log_formats import CanonicalLogEvent
         model = CanonicalLogEvent
