@@ -24,4 +24,4 @@ The proposed platform will help analysts move from isolated events to evidence-l
 
 ## Scope and current limits
 
-The repository currently contains a health API, dashboard shell, storage configuration and planning documentation. Processing 15 GB, 30 GB, and 50 GB datasets is a future goal, not an implemented capability. There are no detection results, benchmarks, incident logs, or prevention claims.
+The repository contains the foundation, source-derived contract and bounded ingestion with local job tracking/recovery/UI. Detection and analysis are future phases. Processing 15 GB, 30 GB, and 50 GB datasets is a future goal, not an implemented capability. There are no verified real incidents, planted-attack scores, full-tier benchmarks or prevention claims.

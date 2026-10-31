@@ -1,6 +1,6 @@
 # Requirements
 
-**Status:** all functional requirements below are planned and unimplemented. Validation criteria describe future work; foundation and source-contract tests exist; no analysis benchmarks exist.
+**Status:** detection/correlation/explanation requirements below remain planned. Foundation, source-contract and bounded-ingestion tests exist; full-tier analysis benchmarks remain unavailable.
 
 ## A. Detect and Label
 
@@ -51,3 +51,7 @@ No throughput, completion time, hardware configuration, or memory ceiling is pro
 ## Chunk 2 boundaries
 
 The user-supplied synthetic SimEDR generator was used to create and inspect a local 1 GiB JSONL file. The v1 contract, mappings and validation tests cover that observed source only. Source-provided simulated alert tags remain annotations. A real organizer/5 GB source still requires independent profiling and mapping review. No complete ingestion engine, security detections or performance benchmarks are delivered.
+
+## Chunk 3 boundaries
+
+Bounded ingestion implements the approved synthetic JSONL contract, resource-configured Arrow/Parquet batching, single local writer, validation ledgers, job lifecycle APIs/UI, cancellation and checkpoint recovery. Malformed records remain referenced rather than silently discarded. No attack detection, ATT&CK mapping, graph/correlation or AI is introduced. Larger-tier performance remains unverified. See [ingestion workflow](ingestion.md).

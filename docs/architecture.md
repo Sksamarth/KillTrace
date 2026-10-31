@@ -2,7 +2,7 @@
 
 ## Scope and implemented foundation
 
-The implementation exposes only `GET /api/health`, OpenAPI documentation, and a React shell showing real API connectivity. Pydantic validates storage resource settings. A tested factory opens an on-disk DuckDB database without creating any application tables. Docker Compose defines loopback-only frontend/backend services and persistent storage. Detection and analysis dependencies are installed but unused. Chunk 2 adds a versioned source-specific contract derived from an inspected synthetic SimEDR JSONL file; no undisclosed source schema is assumed.
+The foundation exposed `GET /api/health`, OpenAPI and a React shell; Chunk 3 extends them with local ingestion job APIs and an ingestion interface. Pydantic validates storage resource settings. A tested factory opens an on-disk DuckDB database without creating any application tables. Docker Compose defines loopback-only frontend/backend services and persistent storage. Detection and analysis dependencies are installed but unused. Chunk 2 adds a versioned source-specific contract derived from an inspected synthetic SimEDR JSONL file; no undisclosed source schema is assumed.
 
 ## Proposed processing architecture
 
@@ -15,17 +15,17 @@ Authorized sources -> adapter/schema discovery -> bounded Arrow batches
                         opt-in evidence summary via Gemini
 ```
 
-Only the API/UI shell and storage connection factory exist today. The worker, job queue, tables, adapters, and all analysis stages are future work. Start with a single local worker rather than distributed infrastructure on an 8 GB laptop. Keep expensive jobs outside API requests; later persist job states, checkpoints, cancellation and recovery. One process owns database writes. Do not let independent worker/API processes write the same DuckDB file. The API will read published immutable artifacts or communicate through the worker.
+Chunk 3 adds the single local ingestion worker, checkpoint/job metadata, canonical Parquet output and compact catalog to the foundation API/UI. Detection and other analysis stages remain future work. Start with a single local worker rather than distributed infrastructure on an 8 GB laptop. Keep expensive jobs outside API requests; later persist job states, checkpoints, cancellation and recovery. One process owns database writes. Do not let independent worker/API processes write the same DuckDB file. The API will read published immutable artifacts or communicate through the worker.
 
 ## Dataset contract remains open
 
-Before ingestion, inspect authorized representative samples, formats, encodings, timestamp/timezone semantics, entity identifiers, data sensitivity, and source provenance. Define source-specific adapters and a versioned canonical contract from that evidence. Missing fields and ambiguous times must be recorded rather than invented. Preserve evidence references and transformation versions. The foundation delivered no event schema. Chunk 2 now provides a single-record JSONL validator and versioned Arrow/Parquet contract for the inspected synthetic source only. Bulk ingestion, source upload and production adapters remain unimplemented. See [data contract](data-contract.md) and [dataset analysis](dataset-analysis.md).
+Before ingestion, inspect authorized representative samples, formats, encodings, timestamp/timezone semantics, entity identifiers, data sensitivity, and source provenance. Define source-specific adapters and a versioned canonical contract from that evidence. Missing fields and ambiguous times must be recorded rather than invented. Preserve evidence references and transformation versions. The foundation delivered no event schema. Chunk 2 now provides a single-record JSONL validator and versioned Arrow/Parquet contract for the inspected synthetic source only. Chunk 3 now adds bounded offline ingestion and local job APIs/UI; uploads and other source adapters remain unimplemented. See [data contract](data-contract.md) and [dataset analysis](dataset-analysis.md).
 
 ## Resource strategy for Ryzen 5 / 8 GB / no GPU
 
 - Start DuckDB at 1 GB buffer budget and two threads; spill to disk with a 10 GB temporary-space ceiling. The connection factory disables external access and insertion-order preservation. Trusted adapter code will own file I/O; SQL queries may not open arbitrary files.
 - DuckDB's memory setting is not a process-wide RSS ceiling. Python, Arrow, query operators, and NetworkX require additional memory. Compose caps the backend at 2 GB; tune this after measurement. No dataset-size support or throughput is claimed.
-- Future ingestion will iterate Arrow batches with both byte and row limits, cap individual record size, project needed columns, and write bounded Parquet row groups. Do not load full datasets into Pandas, Python lists, or a NetworkX graph.
+- Chunk 3 ingestion iterates Arrow batches with both byte and row limits, caps individual record size and writes bounded partitioned Parquet row groups. Do not load full datasets into Pandas, Python lists, or a NetworkX graph.
 - Correlation needs bounded time/entity windows, disk checkpoints, and explicit late-event handling. Persist global graph edges; load only limited incident subgraphs into NetworkX. Bound frontend nodes, edges, result pages and chart buckets before rendering.
 - Proposed initial budgets: 1 GB DuckDB buffers, up to 512 MB worker Python/Arrow working set, up to 256 MB graph slice. These are design targets, not enforcement or measured results. Leave several GB for Windows, browser, editor and Docker overhead. Prefer local processes when Docker overhead is too high.
 - Reject or pause work when disk space is insufficient. Quotas, admission controls, batch bounds, graph limits, and worker scheduling remain to be implemented and benchmarked. CPU-only operation needs no local model or GPU.
@@ -54,3 +54,11 @@ Vite proxies API traffic locally; Nginx does the same in Compose. This avoids a 
 4. Add correlation, bounded graph API, and evidence drill-down.
 5. Add contextual reachability and optional Gemini summaries.
 6. Benchmark 15/30/50 GB targets only after functional correctness; report peak RSS, disk/spill, runtime, hardware and failure recovery.
+
+## Chunk 3 implementation
+
+The [ingestion worker](ingestion.md) uses the unchanged canonical contract and one source record at a time. Bounded Arrow batches write UTC-date-partitioned Parquet plus an append-only compact DuckDB locator catalog. There is no global unique/ART index growing with all source records. A single writer lock and short OS-backed management lock coordinate API/CLI jobs; the API itself reads small status manifests and launches one separate local worker.
+
+Checkpoints follow fsynced Parquet, DuckDB transaction commit and ledger fsync. Resume verifies the immutable source, rolls back unfinished output, validates the durable prefix and continues at the saved offset. Cooperative cancellation and resource failures preserve recoverable checkpoints. The UI shows status, counts, diagnostics and checkpoint scope. Actual configuration and filesystem limits are documented in ingestion.md.
+
+Earlier sections describe the long-term analysis architecture. Detection, ATT&CK labeling, correlation, graphs, next-target analysis and Gemini are not implemented in Chunk 3. Larger-tier scalability remains unqualified.

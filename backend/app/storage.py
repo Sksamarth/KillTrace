@@ -1,4 +1,4 @@
-"""Disk-backed connection factory for a future single processing worker.
+"""Disk-backed connection factory for a single local ingestion worker.
 
 The API does not open the database. Do not share a writable database between
 independent API/worker processes. No dataset schema is created here.

@@ -29,3 +29,7 @@ FastAPI health service, React/TypeScript dashboard shell, a disk-backed DuckDB f
 The stack is selected in the root README. Supported log formats, dataset schema, detection methods, correlation contracts, context sources, evaluation datasets, and performance thresholds remain open.
 
 The 15 GB, 30 GB, and 50 GB scales are future evaluation targets. See [requirements](requirements.md) and [roadmap](roadmap.md).
+
+## Chunk 3 status
+
+Bounded ingestion, partitioned Parquet, validation ledgers and job start/status/list/cancel/resume APIs/UI are now implemented for the approved synthetic JSONL profile. Detection and attack analysis remain future work. See [ingestion](ingestion.md) for resource and recovery guarantees and their limits.

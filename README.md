@@ -1,23 +1,18 @@
 # KillChain AI
 
-Trace the attack. Break the chain.
+A local cybersecurity platform being built in phases. **Chunk 3 delivers bounded ingestion and validation only.** Detection, MITRE ATT&CK mapping, correlation, graphs, predictions and Gemini remain future phases. No security outcome or large-tier benchmark is claimed.
 
-A cybersecurity platform foundation for evidence-backed log analysis, MITRE ATT&CK and Cyber Kill Chain mapping, incident correlation, attack reconstruction, and contextual next-target assessment.
+Stack: Python 3.11+, FastAPI/Pydantic, DuckDB, PyArrow/Parquet; React/TypeScript/Vite/Tailwind. Planned analysis libraries remain reserved dependencies. Designed for a single local worker on an 8 GB CPU-only laptop.
 
-**Chunk 1 status:** runnable health API and React shell, resource configuration, disk-backed storage factory, tests, and Docker Compose. Log ingestion, detections, mappings, correlation, graphs, predictions, and Gemini calls are not implemented. No dataset schema or synthetic detections are supplied.
+## Start locally (PowerShell)
 
-## Stack
-
-Python 3.11+, FastAPI, Pydantic; DuckDB, PyArrow and Parquet; Python/YAML rules; NetworkX; React, TypeScript, Vite, Tailwind CSS, Cytoscape.js and Recharts; Google Gemini API; Docker Compose. Analysis and AI libraries are dependencies reserved for later phases.
-
-## Run locally
-
-Use Python 3.11+ and Node 22.12+ (Node 22 LTS recommended). From the repository root, create a virtual environment and install backend dependencies:
+From the repository root, with Python 3.11+ and Node 22.12+:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python -m pip install -r backend/requirements-dev.txt
-Copy-Item .env.example .env
+# Copy only if you do not already have a local .env.
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 .\.venv\Scripts\python -m uvicorn app.main:app --app-dir backend --reload --env-file .env
 ```
 
@@ -29,62 +24,77 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:5173. Vite proxies `/api` to port 8000. API docs: http://localhost:8000/docs. The health endpoint reports process liveness only. Gemini credentials are optional and unused; never put credentials in frontend variables.
+If the laptop's `npm` resolves to a broken older user installation, use the working Node installation explicitly, for example `& 'C:\Program Files\nodejs\npm.cmd' run dev` in the frontend directory.
+
+Open http://localhost:5173. API docs: http://localhost:8000/docs. In the ingestion page, choose the existing `simedr-1gib.jsonl`, acknowledge the supported synthetic source and start a job. The worker runs in a separate local process; the UI shows accepted/rejected counts, validation issues, checkpoints, cancellation and resume.
+
+The default source root is `data/`; override `KILLCHAIN_INGESTION_INPUT_DIR` for another authorized local directory. Input paths are relative to that root. Absolute paths, traversal and resolved paths outside it are rejected. No uploads or network log readers exist. Only inspected synthetic SimEDR UTF-8 JSON Lines (`.jsonl`/`.ndjson`) is supported; no other organizer schema is assumed.
+
+If the existing generated sample is missing, the previously supplied generator can create it:
+
+```powershell
+.\.venv\Scripts\python scripts/generate_sample.py
+```
+
+It refuses to overwrite files and targets 1 GiB, completing the final whole record. All rows are synthetic, including baseline rows without labels. Existing simulated source annotations are preserved without interpreting them as KillChain detections. The logfile and manifests stay outside Git under ignored `data/`.
+
+## Ingest from the CLI
+
+```powershell
+$env:PYTHONPATH='backend'
+.\.venv\Scripts\python -m app.ingestion --source simedr-1gib.jsonl
+.\.venv\Scripts\python -m app.ingestion --resume JOB_ID
+```
+
+CLI reads the local `.env`; source references are relative to the configured input root. It uses the same single-writer lock and recovery as API jobs. Interrupted/failed/cancelled jobs can resume; completed jobs cannot. A changed original source is refused on resume. Checkpoint recovery retains committed records and rolls back unfinished batches, not original logs.
 
 ## Docker Compose
+
+Docker Engine/Compose required; execution is not verified on this development machine.
 
 ```sh
 docker compose up --build
 ```
 
-Open http://localhost:8080. Ports bind to loopback. The backend runs as a non-root user with one API process. A named volume persists analysis storage; it is currently empty because the API does not open a database. Compose reads optional resource overrides from `.env`. The Gemini key is deliberately not passed to containers until integration exists. Container execution requires a Docker Engine/Compose installation and has not been verified in the current development environment.
+Open http://localhost:8080. Host `data/` is mounted read-only at `/inputs`; job outputs persist in named `/data`. Ports bind to loopback. The backend remains non-root. API and worker share a 2 GB container cap, with the worker's own lower memory admission budget. Local and Compose output stores are separate.
+
+## Resource defaults and output
+
+`.env.example` exposes batch rows (4,096), payload estimate (8 MiB), row groups (1,024), worker RSS admission (768 MiB), temporary disk (64 MiB), free-space reserve (256 MiB), input root and existing DuckDB settings. Batches flush on the first row/byte limit. Worker DuckDB buffers are additionally clamped to half the admission budget; spill is clamped to leave room for a pending part. These are bounded working sets and cooperative checks, not a guarantee against every transient allocation or OS kill.
+
+Each job stores `job.json`, a durable `checkpoint.json`, validation ledger, compact append-only DuckDB catalog and canonical parts under `data/jobs/JOB_ID/events/date=YYYY-MM-DD/`. Uncertain timestamps use `date=unknown`. The approved canonical schema is unchanged. Original raw file references, byte spans, digests, source/batch/schema/transform versions remain intact. Identical raw content at distinct byte locations is retained as separate occurrences. No complete dataset is loaded into Pandas or Python lists.
+
+See [ingestion workflow, settings, lifecycle and recovery](docs/ingestion.md) for exact limits, errors and filesystem caveats. Large-tier 15/30/50 GB support remains unverified; small tests and the local 1 GiB exercise do not establish that qualification.
+
+## API
+
+| Route | Purpose |
+| --- | --- |
+| `GET /api/health` | Process liveness |
+| `GET /api/ingestion/sources` | Supported local source list/configuration |
+| `POST /api/ingestion/jobs` | Start background ingestion (202) |
+| `GET /api/ingestion/jobs` | List jobs |
+| `GET /api/ingestion/jobs/{id}` | Status, counts, errors and checkpoint |
+| `GET /api/ingestion/jobs/{id}/validation` | Bounded durable diagnostic pages |
+| `POST /api/ingestion/jobs/{id}/cancel` | Request cooperative cancellation |
+| `POST /api/ingestion/jobs/{id}/resume` | Resume recoverable work |
+
+Start body: `{"source":"simedr-1gib.jsonl","source_profile":"simedr-json-1.0.0","synthetic":true}`. Add `source_id` to set a stable processing source identity. Unknown sources/jobs return 404, invalid bodies 422, unsafe paths 400, and worker/state conflicts 409. Normal requests do not wait for bulk processing.
 
 ## Checks
 
 ```powershell
 .\.venv\Scripts\python -m pytest -c backend/pytest.ini backend/tests
-cd frontend
-npm run build
+.\.venv\Scripts\python -m pip check
+npm --prefix frontend run build
 ```
 
-Backend dependency ranges are declared in requirements files; `backend/requirements.lock.txt` captures the versions tested on the development Python interpreter. Re-resolve for the target platform/Python before deployment. Frontend versions are pinned transitively by `package-lock.json`.
+Tests cover contract validation, streaming, multiple batches, resource failures, cancellation, crash rollback, resume integrity and API behavior using small explicitly synthetic fixtures. They do not prove larger-tier performance. CI checks Python 3.11/3.14 and Node 22. Backend ranges and the development lock snapshot are retained; the latter is not a cross-platform guarantee.
 
-## Structure
+## Documentation and handling
 
-- `backend/app/`: health API, validated configuration, schema-free DuckDB factory.
-- `backend/tests/`: API and storage configuration/persistence checks.
-- `frontend/`: responsive UI shell, same-origin API requests, build configuration.
-- `rules/`: rule design policy; no detection content.
-- `docs/architecture.md`: architecture report, memory budgets, risks and phase boundaries.
-- `docs/roadmap.md`: incremental delivery gates.
-- `sample-data/`: data policy only. Runtime data belongs in ignored `data/`.
+[Architecture](docs/architecture.md) · [Ingestion](docs/ingestion.md) · [Data contract](docs/data-contract.md) · [Dataset analysis](docs/dataset-analysis.md) · [Mappings](docs/field-mappings.md) · [Roadmap](docs/roadmap.md)
 
-The historical `src/`, `tests/`, and `assets/` directories are reserved scaffolding. The GitHub repository remains named KillTrace; the product is KillChain AI. Historical planning documents describe intent, not implemented capabilities; this README and architecture report define current status.
+Never commit `.env`, keys, passwords, bulk datasets or private logs. No key is required; AI calls remain absent. This is a loopback-only local tool with no authentication or remote deployment. The repository remains named KillTrace; the product is KillChain AI.
 
-## Data and security
-
-Do not commit real logs, datasets, `.env`, API keys, or private configuration. No upload, authentication, or remote deployment interface exists yet. Keep this foundation local until authorization, tenant isolation, upload limits, and audit controls are implemented. AI will summarize evidence only after explicit data handling controls are designed; it must never invent detections or treat untrusted log text as instructions.
-
-## License
-
-[MIT](LICENSE).
-
-## Chunk 2 - synthetic dataset and data contract
-
-A 1 GiB JSONL test file was generated locally from the user-supplied Mitigata SimEDR script and fully inspected. All rows are synthetic; supplied alert and ATT&CK tags are simulated source metadata, not detections produced by KillChain AI. The logfile, generation manifest and full profiling report are under ignored `data/` and are not committed. Only 21 small explicitly synthetic test excerpts are versioned.
-
-- [Dataset analysis](docs/dataset-analysis.md): full-file findings, field inventory and limitations.
-- [Canonical v1 contract](docs/data-contract.md): provenance, uncertainty, validation and memory limits.
-- [Source mappings](docs/field-mappings.md): all observed paths, including unpromoted source fields.
-- [Versioned schema artifacts](schemas/README.md): JSON Schema and explicit Arrow/Parquet layout.
-
-The Python contract validates one bounded record and supports fixture-scale Parquet round trips. No bulk ingestion pipeline or detection engine is implemented. Optional CEF/syslog/HTTP output from the pasted script was not generated or validated. A future organizer/5 GB sample needs independent inspection before reuse of this profile.
-
-To create another local 1 GiB synthetic file (the generator refuses to overwrite existing files):
-
-```powershell
-.\.venv\Scripts\python scripts/generate_sample.py --output data/another-simedr-1gib.jsonl
-.\.venv\Scripts\python scripts/profile_sample.py data/another-simedr-1gib.jsonl --report data/another-simedr-1gib.profile.json
-```
-
-The byte target is 1,073,741,824; generation finishes the last complete record, so actual size can exceed it slightly. The seed controls random choices, not UUIDs/timestamps. Inspection uses capped per-record reads and disk-backed duplicate indexes. Run the existing backend test command above; see the contract for schema-artifact export instructions.
+[MIT License](LICENSE).
