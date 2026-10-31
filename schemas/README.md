@@ -10,3 +10,6 @@ The v1.0.0 contract is derived from the actual locally generated synthetic SimED
 - [Dataset inspection](../docs/dataset-analysis.md)
 
 Python source of truth: `backend/app/contracts/v1.py` and `arrow_v1.py`. Regenerate artifacts from the repository root with `PYTHONPATH=backend python scripts/export_contract.py` (POSIX) or `$env:PYTHONPATH='backend'; .\.venv\Scripts\python scripts/export_contract.py` (PowerShell). Tests check artifact consistency and storage round trips. Unknown schema versions are rejected; source-specific extra fields are retained under `source_fields` rather than silently accepted as canonical columns.
+
+
+Current raw/server extension: see [raw-log ingestion](../docs/raw-log-ingestion.md). The earlier synthetic-only statements describe the original v1 ingestion scope; explicit raw-text and combined-access profiles now use canonical v2.

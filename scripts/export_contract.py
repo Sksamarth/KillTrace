@@ -11,6 +11,11 @@ def export(directory: Path):
     for name, model in (("event.schema.json", CanonicalEvent), ("validation.schema.json", RecordValidation)):
         (directory / name).write_text(json.dumps(model.model_json_schema(), indent=2) + "\n", encoding="utf-8")
     (directory / "arrow-schema.txt").write_text(str(ARROW_SCHEMA) + "\n", encoding="utf-8")
+    from app.log_formats import CanonicalLogEvent, LogValidation
+    newer = directory.parent / "v2"
+    newer.mkdir(exist_ok=True)
+    (newer / "event.schema.json").write_text(json.dumps(CanonicalLogEvent.model_json_schema(), indent=2) + "\n", encoding="utf-8")
+    (newer / "validation.schema.json").write_text(json.dumps(LogValidation.model_json_schema(), indent=2) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

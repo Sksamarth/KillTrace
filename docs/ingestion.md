@@ -2,7 +2,7 @@
 
 ## Supported source and phase boundary
 
-Only the approved **simedr-json-1.0.0** synthetic UTF-8 JSON Lines profile is supported. `.jsonl` and `.ndjson` are filename aliases for the same format. Every physical line is one logical record; the final record may omit a newline. No CSV, CEF, syslog, compressed archive, binary log, new source schema or schema inference is implemented. The source-specific [v1 contract](data-contract.md) and [observed mappings](field-mappings.md) are unchanged.
+The original v1 profile is **simedr-json-1.0.0**. Explicit v2 raw-text, key-value, generic JSON and combined access-log profiles are now available; see [current profile matrix](raw-log-ingestion.md). `.jsonl` and `.ndjson` are filename aliases for the same format. Every physical line is one logical record; the final record may omit a newline. CSV/CEF/syslog-specific field mappings, compressed archives, binary decoding and automatic schema inference are not implemented. UTF-8 syslog/application messages can be preserved using raw-text mode. The source-specific [v1 contract](data-contract.md) and [observed mappings](field-mappings.md) are unchanged.
 
 This phase ingests and validates only. It adds no detections, ATT&CK mappings, incident correlation, graph visualization or AI calls. Source-supplied simulated annotations are preserved as source JSON without interpretation. The broader PRD remains the roadmap for later chunks.
 
@@ -132,3 +132,6 @@ These are development ingestion/recovery checks on the local synthetic 1 GiB fil
 | `docs/architecture.md`, `docs/data-contract.md`, `docs/problem-statement.md`, `docs/project-overview.md`, `docs/requirements.md`, `docs/roadmap.md` | Current phase/status and implementation boundaries |
 
 The existing canonical Python models, versioned event/validation/Arrow schema artifacts, source fixtures, generator and frontend dependency manifest are unchanged.
+
+
+Current raw/server extension: see [raw-log ingestion](raw-log-ingestion.md). The earlier synthetic-only statements describe the original v1 ingestion scope; explicit raw-text and combined-access profiles now use canonical v2.

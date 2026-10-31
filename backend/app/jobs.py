@@ -15,14 +15,18 @@ def snapshot(settings):
     return data
 
 
-def create_job(settings, reference, source_id="local-simedr"):
+def create_job(settings, reference, source_id=None, source_profile="simedr-json-1.0.0", synthetic=True):
+    from app.log_formats import PROFILES
+    if source_profile not in PROFILES or (source_profile == "simedr-json-1.0.0" and not synthetic):
+        raise ValueError("unsupported source profile or synthetic flag")
+    source_id = source_id or ("local-simedr" if source_profile == "simedr-json-1.0.0" else "local-logs")
     source = resolve_source(settings, reference)
     root = jobs_root(settings)
     job_id = uuid4().hex
     work = root / job_id
     work.mkdir()
-    job = {"job_id": job_id, "source_reference": reference, "source_path": str(source), "source_profile": "simedr-json-1.0.0", "source_id": source_id, "synthetic": True,
-        "source_size": source.stat().st_size, "source_mtime_ns": source.stat().st_mtime_ns, "schema_version": "1.0.0", "transformation_version": "simedr-json/1.0.0",
+    job = {"job_id": job_id, "source_reference": reference, "source_path": str(source), "source_profile": source_profile, "source_id": source_id, "synthetic": synthetic,
+        "source_size": source.stat().st_size, "source_mtime_ns": source.stat().st_mtime_ns, "schema_version": "1.0.0" if source_profile == "simedr-json-1.0.0" else "2.0.0", "transformation_version": PROFILES[source_profile][1],
         "status": "queued", "created_at": now(), "started_at": None, "completed_at": None, "error": None, "checkpoint": None,
         "records_processed": 0, "records_accepted": 0, "records_partial": 0, "records_rejected": 0, "bytes_processed": 0, "attempt": 1,
         "elapsed_seconds": 0, "settings": snapshot(settings), "worker_pid": None}

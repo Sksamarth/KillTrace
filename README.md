@@ -26,9 +26,9 @@ npm run dev
 
 If the laptop's `npm` resolves to a broken older user installation, use the working Node installation explicitly, for example `& 'C:\Program Files\nodejs\npm.cmd' run dev` in the frontend directory.
 
-Open http://localhost:5173. API docs: http://localhost:8000/docs. In the ingestion page, choose the existing `simedr-1gib.jsonl`, acknowledge the supported synthetic source and start a job. The worker runs in a separate local process; the UI shows accepted/rejected counts, validation issues, checkpoints, cancellation and resume.
+Open http://localhost:5173. API docs: http://localhost:8000/docs. In the ingestion page, select a source format and local file, acknowledge authorization and start a job. For `firex-10G.log`, choose **Quoted key=value logs**. The worker runs in a separate local process; the UI shows accepted/rejected counts, validation issues, checkpoints, cancellation and resume.
 
-The default source root is `data/`; override `KILLCHAIN_INGESTION_INPUT_DIR` for another authorized local directory. Input paths are relative to that root. Absolute paths, traversal and resolved paths outside it are rejected. No uploads or network log readers exist. Only inspected synthetic SimEDR UTF-8 JSON Lines (`.jsonl`/`.ndjson`) is supported; no other organizer schema is assumed.
+The default source root is `data/`; override `KILLCHAIN_INGESTION_INPUT_DIR` for another authorized local directory. Input paths are relative to that root. Absolute paths, traversal and resolved paths outside it are rejected. No uploads or network log readers exist. Explicit profiles support raw UTF-8 text, quoted key=value logs (including the supplied FireX file), generic JSON objects, standard combined access logs and existing synthetic SimEDR JSONL. Select the format explicitly; unknown fields are preserved without guessed entity mappings. See docs/raw-log-ingestion.md.
 
 If the existing generated sample is missing, the previously supplied generator can create it:
 
@@ -43,6 +43,7 @@ It refuses to overwrite files and targets 1 GiB, completing the final whole reco
 ```powershell
 $env:PYTHONPATH='backend'
 .\.venv\Scripts\python -m app.ingestion --source simedr-1gib.jsonl
+.\.venv\Scripts\python -m app.ingestion --source firex-10G.log --profile key-value-1.0.0
 .\.venv\Scripts\python -m app.ingestion --resume JOB_ID
 ```
 
@@ -62,7 +63,7 @@ Open http://localhost:8080. Host `data/` is mounted read-only at `/inputs`; job 
 
 `.env.example` exposes batch rows (4,096), payload estimate (8 MiB), row groups (1,024), worker RSS admission (768 MiB), temporary disk (64 MiB), free-space reserve (256 MiB), input root and existing DuckDB settings. Batches flush on the first row/byte limit. Worker DuckDB buffers are additionally clamped to half the admission budget; spill is clamped to leave room for a pending part. These are bounded working sets and cooperative checks, not a guarantee against every transient allocation or OS kill.
 
-Each job stores `job.json`, a durable `checkpoint.json`, validation ledger, compact append-only DuckDB catalog and canonical parts under `data/jobs/JOB_ID/events/date=YYYY-MM-DD/`. Uncertain timestamps use `date=unknown`. The approved canonical schema is unchanged. Original raw file references, byte spans, digests, source/batch/schema/transform versions remain intact. Identical raw content at distinct byte locations is retained as separate occurrences. No complete dataset is loaded into Pandas or Python lists.
+Each job stores `job.json`, a durable `checkpoint.json`, validation ledger, compact append-only DuckDB catalog and canonical parts under `data/jobs/JOB_ID/events/date=YYYY-MM-DD/`. Uncertain timestamps use `date=unknown`. SimEDR uses unchanged canonical v1; new profiles use v2 with the same Arrow columns. Original raw file references, byte spans, digests, source/batch/schema/transform versions remain intact. Identical raw content at distinct byte locations is retained as separate occurrences. No complete dataset is loaded into Pandas or Python lists.
 
 See [ingestion workflow, settings, lifecycle and recovery](docs/ingestion.md) for exact limits, errors and filesystem caveats. Large-tier 15/30/50 GB support remains unverified; small tests and the local 1 GiB exercise do not establish that qualification.
 
@@ -98,3 +99,9 @@ Tests cover contract validation, streaming, multiple batches, resource failures,
 Never commit `.env`, keys, passwords, bulk datasets or private logs. No key is required; AI calls remain absent. This is a loopback-only local tool with no authentication or remote deployment. The repository remains named KillTrace; the product is KillChain AI.
 
 [MIT License](LICENSE).
+
+
+See [raw-log ingestion and JSONL conversion](docs/raw-log-ingestion.md) for supported profiles, field mappings and limits.
+
+
+For the supplied FireX file, select **Quoted key=value logs** and `firex-10G.log` in the UI. To export easy-to-query JSONL independently, use `PYTHONPATH=backend python -m app.convert_logs data/firex-10G.log data/firex-10G.converted.jsonl --profile key-value`. Original data and converted exports remain excluded from Git. This file is 6,543,120,032 bytes; its name is not a size measurement.

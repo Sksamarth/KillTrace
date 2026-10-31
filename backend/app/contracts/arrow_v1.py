@@ -50,4 +50,8 @@ def from_arrow_row(row: dict) -> CanonicalEvent:
     if row.get("process") is not None and row["process"].get("hashes") is not None:
         row["process"] = {**row["process"], "hashes": dict(row["process"]["hashes"])}
     # JSON mode preserves strict UUID/IP/datetime decoding rules across storage.
-    return CanonicalEvent.model_validate_json(json.dumps(row, default=lambda value: value.isoformat()))
+    model = CanonicalEvent
+    if row.get("schema_version") == "2.0.0":
+        from app.log_formats import CanonicalLogEvent
+        model = CanonicalLogEvent
+    return model.model_validate_json(json.dumps(row, default=lambda value: value.isoformat()))

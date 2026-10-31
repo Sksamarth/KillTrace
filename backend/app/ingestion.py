@@ -1,4 +1,4 @@
-"""Single-writer, checkpointed SimEDR JSONL to canonical Parquet ingestion."""
+"""Single-writer, checkpointed log profiles to canonical Parquet ingestion."""
 import argparse
 import hashlib
 import json
@@ -11,8 +11,9 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from app.config import Settings
+from app.log_formats import PROFILES, validate_log_record
 from app.contracts.arrow_v1 import ARROW_SCHEMA, to_arrow_row
-from app.contracts.v1 import MAX_RECORD_BYTES, Provenance, TRANSFORMATION_VERSION, validate_json_record
+from app.contracts.v1 import MAX_RECORD_BYTES, Provenance, validate_json_record
 from app.job_store import atomic_json, now, process_alive, read_json, release, resolve_source, sync_directory
 from app.resources import check_resources, memory_bytes
 from app.storage import open_database
@@ -134,7 +135,7 @@ def run_job(work: Path):
             directory.mkdir(parents=True, exist_ok=True)
             target = directory / f"part-{part:08d}.parquet"
             temporary = target.with_suffix(".tmp")
-            pq.write_table(pa.Table.from_pylist([row for row, _ in entries], schema=ARROW_SCHEMA), temporary, compression="zstd", row_group_size=settings.ingestion_row_group_rows)
+            pq.write_table(pa.Table.from_pylist([row for row, _ in entries], schema=ARROW_SCHEMA.with_metadata({**ARROW_SCHEMA.metadata, b"killchain.schema_version": job["schema_version"].encode(), b"killchain.source_profile": job["source_profile"].encode(), b"killchain.evidence": b"raw evidence referenced; synthetic status in provenance"})), temporary, compression="zstd", row_group_size=settings.ingestion_row_group_rows)
             with temporary.open("r+b") as part_stream:
                 os.fsync(part_stream.fileno())
             if temporary.stat().st_size > settings.ingestion_temp_bytes:
@@ -222,8 +223,8 @@ def run_job(work: Path):
                 if raw is None:
                     row, status, issues = None, "rejected", ["record_too_large"]
                 else:
-                    ref = Provenance(original_file=str(source), artifact_sha256=digest, source_id=job["source_id"], source_format="jsonl", record_number=number, byte_offset=offset, byte_length=length, raw_sha256=raw_hash, batch_id=UUID(job["job_id"]), transformation_version=TRANSFORMATION_VERSION, synthetic=True)
-                    result = validate_json_record(raw, ref)
+                    ref = Provenance(original_file=str(source), artifact_sha256=digest, source_id=job["source_id"], source_format=PROFILES[job["source_profile"]][0], record_number=number, byte_offset=offset, byte_length=length, raw_sha256=raw_hash, batch_id=UUID(job["job_id"]), transformation_version=job["transformation_version"], synthetic=job["synthetic"])
+                    result = validate_json_record(raw, ref) if job["source_profile"] == "simedr-json-1.0.0" else validate_log_record(raw, ref, job["source_profile"])
                     row = to_arrow_row(result.event) if result.event else None
                     status, issues = result.status, result.issues
                 cost = length + len(row["source_fields_json"].encode("utf-8")) + 4096 if row else 0
@@ -242,7 +243,7 @@ def run_job(work: Path):
                 else:
                     job["records_rejected"] += 1
                 if status != "valid":
-                    diagnostic = {"ledger_version": "1.0.0", "validator_version": "1.0.0", "status": status, "issues": issues, "artifact_sha256": digest, "source_id": job["source_id"], "job_id": job["job_id"], "transformation_version": TRANSFORMATION_VERSION, "record_number": number, "byte_offset": offset, "byte_length": length, "raw_sha256": raw_hash}
+                    diagnostic = {"ledger_version": "1.0.0", "validator_version": "1.0.0", "status": status, "issues": issues, "artifact_sha256": digest, "source_id": job["source_id"], "job_id": job["job_id"], "transformation_version": job["transformation_version"], "record_number": number, "byte_offset": offset, "byte_length": length, "raw_sha256": raw_hash}
                     ledger.write((json.dumps(diagnostic) + "\n").encode("utf-8"))
                     job["last_validation_issue"] = diagnostic
                 since_checkpoint += 1
@@ -287,6 +288,8 @@ if __name__ == "__main__":
     parser.add_argument("--job-dir", type=Path)
     parser.add_argument("--source")
     parser.add_argument("--resume")
+    parser.add_argument("--profile", choices=list(PROFILES), default="simedr-json-1.0.0")
+    parser.add_argument("--synthetic", action="store_true")
     parser.add_argument("--dispatch-token")
     args = parser.parse_args()
     if args.job_dir:
@@ -302,7 +305,7 @@ if __name__ == "__main__":
     else:
         from app.jobs import create_job, prepare_resume
         settings = Settings(_env_file=".env")
-        work = prepare_resume(settings, args.resume) if args.resume else create_job(settings, args.source)
+        work = prepare_resume(settings, args.resume) if args.resume else create_job(settings, args.source, source_profile=args.profile, synthetic=args.synthetic or args.profile == "simedr-json-1.0.0")
         result = run_job(work)
     print(json.dumps({key: value for key, value in result.items() if key not in {"settings", "source_path"}}, indent=2))
     raise SystemExit(0 if result["status"] == "completed" else 1)

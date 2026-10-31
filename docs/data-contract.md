@@ -83,3 +83,6 @@ Future batching should flush at the first of a row cap or byte cap (initial desi
 Versioned artifacts are published together with transformation and mapping definitions. Breaking field, type or semantic changes require a new major contract and explicit migration. A new additive minor version also requires reader/schema agreement; v1 readers reject unsupported version literals. Re-export artifacts with `$env:PYTHONPATH='backend'; .\.venv\Scripts\python scripts/export_contract.py` in PowerShell.
 
 This release covers the generated JSONL profile only. The supplied script describes optional CEF and syslog/HTTP outputs, but none was generated or inspected. Its CEF formatter is lossy; it must have its own samples, mapping and parser tests before support is advertised. The organizer's future 5 GB sample must be profiled and compared against this source profile before reuse; no assumption of identical fields is permitted. No performance or detection benchmark is claimed.
+
+
+Current raw/server extension: see [raw-log ingestion](raw-log-ingestion.md). The earlier synthetic-only statements describe the original v1 ingestion scope; explicit raw-text and combined-access profiles now use canonical v2.

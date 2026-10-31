@@ -2,7 +2,7 @@ import json
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.config import Settings
 from app.job_store import ACTIVE, job_dir, list_jobs, public_job, read_json, reconcile, sources
@@ -14,9 +14,15 @@ router = APIRouter(prefix="/api/ingestion", tags=["ingestion"])
 class StartJob(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     source: str = Field(min_length=1, max_length=1024)
-    source_id: str = Field(default="local-simedr", min_length=1, max_length=256)
-    source_profile: Literal["simedr-json-1.0.0"]
-    synthetic: Literal[True]
+    source_id: str | None = Field(default=None, min_length=1, max_length=256)
+    source_profile: Literal["simedr-json-1.0.0", "raw-text-1.0.0", "web-combined-1.0.0", "key-value-1.0.0", "json-record-1.0.0"]
+    synthetic: bool
+
+    @model_validator(mode="after")
+    def profile_flags(self):
+        if self.source_profile == "simedr-json-1.0.0" and not self.synthetic:
+            raise ValueError("SimEDR profile requires synthetic=true")
+        return self
 
 
 def status(settings, job_id):
@@ -40,14 +46,15 @@ def http_error(error):
 @router.get("/sources")
 def input_sources():
     settings = Settings()
-    return {"items": sources(settings), "limit": 100, "source_profile": "simedr-json-1.0.0", "configuration": {key: value for key, value in settings.model_dump(mode="json").items() if key.startswith("ingestion_") and key != "ingestion_input_dir"}}
+    from app.log_formats import PROFILES
+    return {"items": sources(settings), "limit": 100, "source_profiles": list(PROFILES), "source_profile": "simedr-json-1.0.0", "configuration": {key: value for key, value in settings.model_dump(mode="json").items() if key.startswith("ingestion_") and key != "ingestion_input_dir"}}
 
 
 @router.post("/jobs", status_code=202)
 def start(body: StartJob):
     settings = Settings()
     try:
-        work = create_job(settings, body.source, body.source_id)
+        work = create_job(settings, body.source, body.source_id, body.source_profile, body.synthetic)
         launch(work)
         return status(settings, work.name)
     except (OSError, ValueError, RuntimeError) as error:

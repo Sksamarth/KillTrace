@@ -199,11 +199,16 @@ def public_job(job):
     return {key: value for key, value in job.items() if key not in {"source_path", "settings", "worker_pid"}}
 
 
+def supported_name(name):
+    path = Path(name)
+    return not name.startswith(".") and (path.suffix.lower() in {".jsonl", ".ndjson", ".log", ".txt"} or not path.suffix or bool(re.fullmatch(r".+(?:\.log|_log)\.\d+", name)))
+
+
 def resolve_source(settings, reference):
     root = (settings.ingestion_input_dir or settings.data_dir).resolve()
     relative = Path(reference)
-    if relative.is_absolute() or ".." in relative.parts or relative.suffix.lower() not in {".jsonl", ".ndjson"}:
-        raise ValueError("provide a relative JSONL filename under the configured input directory")
+    if relative.is_absolute() or ".." in relative.parts or not supported_name(relative.name):
+        raise ValueError("provide a relative supported log filename under the configured input directory")
     path = (root / relative).resolve(strict=True)
     if not path.is_relative_to(root) or not path.is_file():
         raise ValueError("source is outside the input directory or is not a file")
@@ -217,7 +222,7 @@ def sources(settings):
     result = []
     with os.scandir(root) as entries:
         for entry in entries:
-            if entry.is_file(follow_symlinks=False) and Path(entry.name).suffix.lower() in {".jsonl", ".ndjson"}:
+            if entry.is_file(follow_symlinks=False) and supported_name(entry.name):
                 result.append({"reference": entry.name, "bytes": entry.stat().st_size})
                 if len(result) == 100:
                     break
