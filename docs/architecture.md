@@ -1,48 +1,56 @@
-# Proposed architecture
+# KillChain AI — architecture report
 
-**Design status:** conceptual only. No component, interface, storage engine, or deployment environment is implemented or selected.
+## Scope and implemented foundation
 
-## Expected data flow
+The implementation exposes only `GET /api/health`, OpenAPI documentation, and a React shell showing real API connectivity. Pydantic validates storage resource settings. A tested factory opens an on-disk DuckDB database without creating any application tables. Docker Compose defines loopback-only frontend/backend services and persistent storage. Detection and analysis dependencies are installed but unused. No event schema is assumed.
+
+## Proposed processing architecture
 
 ```text
-Security logs
-    |
-    v
-Incremental ingestion -> Normalization -> Detection and labeling
-                            |                     |
-                            v                     v
-                    Evidence storage <-> Event correlation
-                                                  |
-Asset / identity / permission / connectivity ------+
-context                                           v
-                                        Attack path analysis
-                                                  |
-                                                  v
-                                     Interactive timelines and graphs
+Authorized sources -> adapter/schema discovery -> bounded Arrow batches
+    -> partitioned Parquet + source provenance -> single DuckDB processing worker
+    -> evidence-linked detections -> windowed correlation -> bounded graph slices
+    -> paginated FastAPI responses -> Cytoscape.js / Recharts
+                                      |
+                        opt-in evidence summary via Gemini
 ```
 
-## Proposed responsibilities
+Only the API/UI shell and storage connection factory exist today. The worker, job queue, tables, adapters, and all analysis stages are future work. Start with a single local worker rather than distributed infrastructure on an 8 GB laptop. Keep expensive jobs outside API requests; later persist job states, checkpoints, cancellation and recovery. One process owns database writes. Do not let independent worker/API processes write the same DuckDB file. The API will read published immutable artifacts or communicate through the worker.
 
-| Component | Intended responsibility |
-| --- | --- |
-| Ingestion | Read authorized logs incrementally; retain source references. |
-| Normalization | Represent timestamps and host, user, and IP entities consistently; retain original evidence. |
-| Detection and labeling | Identify suspicious events and attach supported ATT&CK technique and kill chain stage labels. |
-| Evidence storage | Persist normalized events, provenance, and intermediate results for later retrieval. |
-| Correlation | Connect relevant events using entities, time, and supporting evidence. |
-| Attack path analysis | Reconstruct observed progression and assess possible next paths using available environmental context. |
-| Presentation | Explain evidence and uncertainty through timelines and host/user graphs. |
+## Dataset contract remains open
 
-## Memory and scale goals
+Before ingestion, inspect authorized representative samples, formats, encodings, timestamp/timezone semantics, entity identifiers, data sensitivity, and source provenance. Define source-specific adapters and a versioned canonical contract from that evidence. Missing fields and ambiguous times must be recorded rather than invented. Preserve evidence references and transformation versions. No schema, parser, source upload, or conversion is delivered in this chunk.
 
-The design will investigate incremental reads, bounded working sets, partitioned correlation, and persisted intermediate state instead of requiring an entire dataset in memory. These are proposals to evaluate, not implemented performance optimizations.
+## Resource strategy for Ryzen 5 / 8 GB / no GPU
 
-Benchmarks are planned for 15 GB, 30 GB, and 50 GB datasets. Resource limits and deployment assumptions must be set before claiming those scales are supported.
+- Start DuckDB at 1 GB buffer budget and two threads; spill to disk with a 10 GB temporary-space ceiling. The connection factory disables external access and insertion-order preservation. Trusted adapter code will own file I/O; SQL queries may not open arbitrary files.
+- DuckDB's memory setting is not a process-wide RSS ceiling. Python, Arrow, query operators, and NetworkX require additional memory. Compose caps the backend at 2 GB; tune this after measurement. No dataset-size support or throughput is claimed.
+- Future ingestion will iterate Arrow batches with both byte and row limits, cap individual record size, project needed columns, and write bounded Parquet row groups. Do not load full datasets into Pandas, Python lists, or a NetworkX graph.
+- Correlation needs bounded time/entity windows, disk checkpoints, and explicit late-event handling. Persist global graph edges; load only limited incident subgraphs into NetworkX. Bound frontend nodes, edges, result pages and chart buckets before rendering.
+- Proposed initial budgets: 1 GB DuckDB buffers, up to 512 MB worker Python/Arrow working set, up to 256 MB graph slice. These are design targets, not enforcement or measured results. Leave several GB for Windows, browser, editor and Docker overhead. Prefer local processes when Docker overhead is too high.
+- Reject or pause work when disk space is insufficient. Quotas, admission controls, batch bounds, graph limits, and worker scheduling remain to be implemented and benchmarked. CPU-only operation needs no local model or GPU.
 
-## Evidence and uncertainty
+DuckDB documents both spill configuration and memory allocations outside its buffer manager: [configuration](https://duckdb.org/docs/stable/configuration/overview) and [out-of-memory guidance](https://duckdb.org/docs/stable/guides/performance/oom). Production memory behavior must be benchmarked under the intended query workload.
 
-Relationships should retain references to their supporting events. Proposed future paths additionally require asset, identity, permission, or connectivity context. Missing context must be disclosed; reachability must not be displayed as confirmed compromise.
+## Detection, mapping and graph integrity
 
-## Open design decisions
+Versioned YAML rules must use safe loading and a validated declarative schema. Every detection must reference source evidence and a tested condition. Define precision/false-positive evaluation before enabling any rule. ATT&CK technique IDs require a pinned catalog version; kill-chain stages remain a separate evidence-backed classification rather than a universal one-to-one mapping.
 
-All technology choices remain **TBD**, including language, parsing formats, event schema, detection strategy, correlation windows, persistence, graph representation, visualization, and deployment. No package manifests or application code are part of initialization.
+Correlation edges must retain reason, timestamps, confidence and evidence. Observed progression and hypothetical future reachability must have distinct representations. Next-target assessments require actual asset, identity, permission and connectivity context; reachability does not establish compromise. NetworkX is for bounded incident slices, not the complete dataset.
+
+## AI boundary
+
+The Google Gen AI SDK is reserved, with no client initialization or network calls. Future Gemini integration must run server-side, require an explicit model choice and data-sharing policy, redact sensitive evidence, bound prompt sizes, timeouts, retries and cost, and validate structured responses. Treat log content as untrusted input. AI output must cite supplied evidence and disclose uncertainty; deterministic detection remains independently testable. Never send raw bulk datasets or trust generated attack claims without evidence.
+
+## Delivery and operational limits
+
+Vite proxies API traffic locally; Nginx does the same in Compose. This avoids a permissive CORS policy. No authentication or multi-user access exists. Before remote use, add authentication, authorization, TLS, audit events, secure uploads, retention and deletion policy. Container base tags and backend dependency ranges need controlled updates and vulnerability review before deployment; the local lock snapshot is not a cross-platform guarantee.
+
+## Next design gates
+
+1. Profile actual authorized samples; approve a versioned event contract and provenance model.
+2. Build a bounded, checkpointable adapter and measure memory/disk use.
+3. Validate a small set of real detection rules and independent ATT&CK/kill-chain mappings.
+4. Add correlation, bounded graph API, and evidence drill-down.
+5. Add contextual reachability and optional Gemini summaries.
+6. Benchmark 15/30/50 GB targets only after functional correctness; report peak RSS, disk/spill, runtime, hardware and failure recovery.

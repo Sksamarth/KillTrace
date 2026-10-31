@@ -1,23 +1,9 @@
-# Project roadmap
+# Delivery roadmap
 
-The roadmap expresses intended work without delivery dates or capability guarantees.
-
-| Milestone | Status | Exit criteria |
-| --- | --- | --- |
-| 1. Repository foundation | Current initialization scope | Public repository on main with README, MIT license, ignore rules, documentation, and tracked directory scaffolding. |
-| 2. Scope and design | Planned | Agree log formats, schema, authorized evaluation data, evidence model, architecture, technology stack, and measurable acceptance criteria. |
-| 3. Detect and correlate | Planned | Implement and evaluate ingestion, suspicious-event detection, ATT&CK and kill chain labeling, and evidence-linked event correlation. |
-| 4. Explain and look ahead | Planned | Implement interactive timelines, host/user graphs, and contextual reachability analysis with visible assumptions. |
-| 5. Evaluate and present | Planned | Evaluate 15 GB, 30 GB, and 50 GB targets; publish runtime, memory, accuracy, limitations, and a reproducible hackathon demonstration. |
-
-## Current boundary
-
-Only milestone 1 is authorized for this initialization. Application development, dependency installation, technology selection, and sample-log generation are outside this task.
-
-## Future evaluation principles
-
-- Define hardware, dataset provenance, log formats, and memory budgets before benchmarking.
-- Measure both output quality and resource use.
-- Report unsupported cases and incomplete evidence.
-- Keep observed attack activity separate from possible future paths.
-- Update status based on demonstrated results rather than target dataset sizes.
+1. **Foundation (Chunk 1):** health API, React shell, disk-backed connection factory, resource settings, tests and Compose. No analysis capability.
+2. **Data contract:** inspect real authorized samples; document schemas, timestamps, provenance and validation before building adapters.
+3. **Ingestion:** bounded Arrow/Parquet pipeline, checkpoints and measured memory/disk failure behavior.
+4. **Detection:** validated YAML rules with evidence and false-positive tests; versioned ATT&CK and separate kill-chain mapping.
+5. **Correlation and graphs:** time/entity windows, provenance edges, paginated APIs, capped NetworkX/Cytoscape slices.
+6. **Reachability and AI:** contextual next-target hypotheses and optional server-side Gemini evidence summaries.
+7. **Hardening and evaluation:** access controls, retention, recovery and measured 15/30/50 GB benchmarks. No scale claim before measurement.

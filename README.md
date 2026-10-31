@@ -1,143 +1,70 @@
-# KillTrace
+# KillChain AI
 
-**Trace the Attack. Break the Chain.**
+Trace the attack. Break the chain.
 
-A Cyber Kill Chain and Attack Path Analysis Platform.
+A cybersecurity platform foundation for evidence-backed log analysis, MITRE ATT&CK and Cyber Kill Chain mapping, incident correlation, attack reconstruction, and contextual next-target assessment.
 
-> **Status: planning and repository initialization.** This repository contains documentation and directory scaffolding only. No application, detection engine, visualization, or processing capability is implemented.
+**Chunk 1 status:** runnable health API and React shell, resource configuration, disk-backed storage factory, tests, and Docker Compose. Log ingestion, detections, mappings, correlation, graphs, predictions, and Gemini calls are not implemented. No dataset schema or synthetic detections are supplied.
 
-## Problem statement
+## Stack
 
-Security logs contain large volumes of isolated signals. Concealed attacks can span hosts, users, IP addresses, and long periods, making it difficult to connect individual alerts into a coherent incident.
+Python 3.11+, FastAPI, Pydantic; DuckDB, PyArrow and Parquet; Python/YAML rules; NetworkX; React, TypeScript, Vite, Tailwind CSS, Cytoscape.js and Recharts; Google Gemini API; Docker Compose. Analysis and AI libraries are dependencies reserved for later phases.
 
-KillTrace aims to reconstruct a unified attack narrative that explains where an attack began, what the attacker did, how it progressed across systems, which hosts and users were affected, and which systems or resources could be reachable next.
+## Run locally
 
-### Motivating use case: INC-01 — 2013 Retail Data Breach
+Use Python 3.11+ and Node 22.12+ (Node 22 LTS recommended). From the repository root, create a virtual environment and install backend dependencies:
 
-A stolen third-party vendor credential, followed by weeks of ignored security alerts, contributed to a major retail breach affecting up to 110 million customers.
-
-This motivating incident illustrates why analysts need correlated evidence, visibility across attack stages, and early detection. It is context for the project, not a claim that KillTrace could have prevented the incident. No incident dataset is included.
-
-## Proposed solution and objectives
-
-The proposed platform will turn security events into evidence-linked timelines and attack graphs. Its three core functional requirements are:
-
-| Objective | Planned behavior |
-| --- | --- |
-| **A. Detect and Label** | Identify suspicious log events, map relevant MITRE ATT&CK techniques, and associate Cyber Kill Chain stages. |
-| **B. Connect the Steps** | Correlate hosts, users, IP addresses, and timestamps into unified attack paths, while keeping memory consumption bounded during large-scale processing. |
-| **C. Explain and Look Ahead** | Provide interactive timelines and host/user attack graphs, and identify potential future paths and reachable resources. |
-
-All three objectives are planned. See [requirements](docs/requirements.md) for scope and future validation criteria.
-
-## Target data scales
-
-| Dataset size | Status |
-| --- | --- |
-| 15 GB | Future processing goal; unimplemented and unbenchmarked |
-| 30 GB | Future processing goal; unimplemented and unbenchmarked |
-| 50 GB | Future processing goal; unimplemented and unbenchmarked |
-
-These are dataset-size targets, not memory budgets, throughput guarantees, or demonstrated capabilities. Hardware, formats, execution time, and peak memory will need to be defined and measured.
-
-## Cyber Kill Chain overview
-
-The [Lockheed Martin Cyber Kill Chain](https://www.lockheedmartin.com/en-us/capabilities/cyber/cyber-kill-chain.html) describes seven stages: Reconnaissance, Weaponization, Delivery, Exploitation, Installation, Command and Control, and Actions on Objectives.
-
-KillTrace plans to use these stages to organize an attack narrative. Evidence may cover only some stages; missing stages will remain unknown rather than being inferred as confirmed activity.
-
-## MITRE ATT&CK integration
-
-[MITRE ATT&CK](https://attack.mitre.org/resources/) describes observed adversary behaviors. Planned event enrichment will attach relevant technique identifiers and supporting evidence. ATT&CK technique mappings and kill chain stage labels will be maintained separately; they do not imply a universal one-to-one mapping. Coverage, mapping rules, and the ATT&CK version remain to be defined.
-
-## Attack path analysis
-
-Observed paths will connect related events through entities and time, preserving the underlying evidence. Potential future paths will depend on available asset, identity, permission, and connectivity context. They will be labeled as hypotheses with assumptions, distinct from observed attacker actions; reachability alone does not prove compromise.
-
-## Expected system architecture
-
-The following is a conceptual proposal; components and interfaces are not implemented.
-
-```text
-Security logs -> Incremental ingestion -> Normalization -> Detection and labeling
-                                              |                    |
-                                              v                    v
-                                      Evidence storage <-> Event correlation
-                                                                  |
-Asset / identity / connectivity context ----------------> Attack path analysis
-                                                                  |
-                                                       Timelines and graphs
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python -m pip install -r backend/requirements-dev.txt
+Copy-Item .env.example .env
+.\.venv\Scripts\python -m uvicorn app.main:app --app-dir backend --reload --env-file .env
 ```
 
-Incremental processing, bounded working sets, and persisted intermediate results are proposed approaches to managing memory. Storage, execution model, and deployment remain TBD. See [architecture](docs/architecture.md).
+In another terminal:
 
-## Planned features
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
 
-- Suspicious-event detection with evidence references.
-- ATT&CK technique enrichment and kill chain stage labeling.
-- Correlation across hosts, users, addresses, and timestamps.
-- Unified attack narratives and interactive timelines.
-- Attack graphs showing relationships between hosts and users.
-- Potential next-step paths and reachable systems/resources with explicit assumptions.
-- Evaluation at 15 GB, 30 GB, and 50 GB with measured memory and runtime.
+Open http://localhost:5173. Vite proxies `/api` to port 8000. API docs: http://localhost:8000/docs. The health endpoint reports process liveness only. Gemini credentials are optional and unused; never put credentials in frontend variables.
 
-## Technology stack
-
-**TBD.** Languages, frameworks, databases, visualization libraries, infrastructure, and deployment tools have not been selected. No dependencies are installed or specified.
-
-## Project roadmap
-
-1. **Repository foundation (current):** establish documentation, MIT license, and directory structure.
-2. **Scope and design (planned):** finalize log formats, event schema, evaluation criteria, architecture, and technology choices.
-3. **Detection and correlation (planned):** implement ingestion, labeling, and evidence-linked reconstruction.
-4. **Explanation and reachability (planned):** implement timelines, graphs, and contextual future-path analysis.
-5. **Evaluation and presentation (planned):** benchmark target dataset sizes and document limits for a hackathon demonstration.
-
-See the [roadmap](docs/roadmap.md) for milestone exit criteria. No application milestone is complete.
-
-## Installation
-
-Implementation is not yet available. There is no application to install or run and no build, dependency installation, or test command at this stage.
-
-To browse the documentation locally:
+## Docker Compose
 
 ```sh
-git clone https://github.com/Sksamarth/KillTrace.git
-cd KillTrace
+docker compose up --build
 ```
 
-## Repository structure
+Open http://localhost:8080. Ports bind to loopback. The backend runs as a non-root user with one API process. A named volume persists analysis storage; it is currently empty because the API does not open a database. Compose reads optional resource overrides from `.env`. The Gemini key is deliberately not passed to containers until integration exists. Container execution requires a Docker Engine/Compose installation and has not been verified in the current development environment.
 
-```text
-KillTrace/
-├── README.md
-├── LICENSE
-├── .gitignore
-├── docs/
-│   ├── problem-statement.md
-│   ├── project-overview.md
-│   ├── requirements.md
-│   ├── architecture.md
-│   └── roadmap.md
-├── src/
-│   └── .gitkeep
-├── tests/
-│   └── .gitkeep
-├── assets/
-│   └── .gitkeep
-└── sample-data/
-    └── README.md
+## Checks
+
+```powershell
+.\.venv\Scripts\python -m pytest -c backend/pytest.ini backend/tests
+cd frontend
+npm run build
 ```
 
-## Documentation
+Backend dependency ranges are declared in requirements files; `backend/requirements.lock.txt` captures the versions tested on the development Python interpreter. Re-resolve for the target platform/Python before deployment. Frontend versions are pinned transitively by `package-lock.json`.
 
-- [Problem statement](docs/problem-statement.md)
-- [Project overview](docs/project-overview.md)
-- [Requirements](docs/requirements.md)
-- [Proposed architecture](docs/architecture.md)
-- [Roadmap](docs/roadmap.md)
-- [Sample-data policy](sample-data/README.md)
+## Structure
+
+- `backend/app/`: health API, validated configuration, schema-free DuckDB factory.
+- `backend/tests/`: API and storage configuration/persistence checks.
+- `frontend/`: responsive UI shell, same-origin API requests, build configuration.
+- `rules/`: rule design policy; no detection content.
+- `docs/architecture.md`: architecture report, memory budgets, risks and phase boundaries.
+- `docs/roadmap.md`: incremental delivery gates.
+- `sample-data/`: data policy only. Runtime data belongs in ignored `data/`.
+
+The historical `src/`, `tests/`, and `assets/` directories are reserved scaffolding. The GitHub repository remains named KillTrace; the product is KillChain AI. Historical planning documents describe intent, not implemented capabilities; this README and architecture report define current status.
+
+## Data and security
+
+Do not commit real logs, datasets, `.env`, API keys, or private configuration. No upload, authentication, or remote deployment interface exists yet. Keep this foundation local until authorization, tenant isolation, upload limits, and audit controls are implemented. AI will summarize evidence only after explicit data handling controls are designed; it must never invent detections or treat untrusted log text as instructions.
 
 ## License
 
-Released under the [MIT License](LICENSE).
+[MIT](LICENSE).

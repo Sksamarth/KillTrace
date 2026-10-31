@@ -4,7 +4,7 @@
 
 Large volumes of security logs can conceal attacks behind disconnected events. Analysts need to correlate evidence across systems and time to understand an incident as a whole.
 
-KillTrace aims to answer:
+KillChain AI aims to answer:
 
 - Where did the attack begin?
 - What actions did the attacker perform?
@@ -24,4 +24,4 @@ The proposed platform will help analysts move from isolated events to evidence-l
 
 ## Scope and current limits
 
-The repository currently contains planning documentation only. Processing 15 GB, 30 GB, and 50 GB datasets is a future goal, not an implemented capability. There are no detection results, benchmarks, incident logs, or prevention claims.
+The repository currently contains a health API, dashboard shell, storage configuration and planning documentation. Processing 15 GB, 30 GB, and 50 GB datasets is a future goal, not an implemented capability. There are no detection results, benchmarks, incident logs, or prevention claims.

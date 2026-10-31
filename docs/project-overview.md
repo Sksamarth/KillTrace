@@ -1,6 +1,6 @@
 # Project overview
 
-**KillTrace — Trace the Attack. Break the Chain.**
+**KillChain AI — Trace the Attack. Break the Chain.**
 
 A Cyber Kill Chain and Attack Path Analysis Platform, planned for a cybersecurity hackathon.
 
@@ -22,10 +22,10 @@ Observed events, inferred correlations, and potential future paths should remain
 
 ## Current repository contents
 
-Documentation, an MIT license, a stack-neutral ignore file, and empty tracked directories for future source, tests, and assets. No runtime components or datasets exist.
+FastAPI health service, React/TypeScript dashboard shell, a disk-backed DuckDB factory, resource configuration, tests, Docker Compose, and architecture documentation. No datasets or analysis features exist.
 
 ## Decisions still open
 
-Technology stack, supported log formats, detection methods, correlation rules, storage, deployment, user interface, data-context sources, evaluation datasets, and performance thresholds are all TBD.
+The stack is selected in the root README. Supported log formats, dataset schema, detection methods, correlation contracts, context sources, evaluation datasets, and performance thresholds remain open.
 
 The 15 GB, 30 GB, and 50 GB scales are future evaluation targets. See [requirements](requirements.md) and [roadmap](roadmap.md).

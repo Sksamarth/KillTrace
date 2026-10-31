@@ -1,6 +1,6 @@
 # Requirements
 
-**Status:** all functional requirements below are planned and unimplemented. Validation criteria describe future work; no tests or benchmark results exist.
+**Status:** all functional requirements below are planned and unimplemented. Validation criteria describe future work; foundation tests exist; no analysis benchmarks exist.
 
 ## A. Detect and Label
 
@@ -40,10 +40,10 @@ Future validation: verify that an analyst can trace displayed actions to source 
 
 No throughput, completion time, hardware configuration, or memory ceiling is promised. Future measurements must record dataset format and provenance, event counts, hardware, runtime, peak memory, and output quality. Dataset size alone does not establish scalability.
 
-## Initialization constraints
+## Chunk 1 boundaries
 
-- Document the project and create only the agreed directory scaffolding.
-- Do not implement frontend, backend, ingestion, detection, or analysis code.
-- Do not select a technology stack or install dependencies.
-- Do not generate placeholder application code or fake sample logs.
-- Do not describe planned functionality as delivered.
+- Deliver a runnable backend/frontend foundation and architecture report using the selected stack.
+- Do not assume log schemas, generate fake detections or implement analysis features.
+- Keep credentials and datasets out of Git.
+- Design for disk-backed processing and bounded memory on an 8 GB laptop.
+- Treat analysis features and dataset-size goals as future work until validated.

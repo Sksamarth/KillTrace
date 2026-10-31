@@ -1,32 +1,41 @@
-# Local credentials and configuration
+# Credentials
 .env
 .env.*
 !.env.example
 *.pem
 *.key
-
-# Runtime logs and temporary files
-*.log
-*.tmp
-*.temp
-*.swp
-*.swo
-*~
-
-# Local editor and operating-system files
-.idea/
-.vscode/
-.DS_Store
-Thumbs.db
-Desktop.ini
-
-# Keep datasets out of Git; retain sample-data documentation
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+# Frontend
+node_modules/
+dist/
+*.tsbuildinfo
+# Private runtime data and large artifacts
+/data/
+*.parquet
+*.duckdb*
+*.csv
+*.jsonl
 /sample-data/*
 !/sample-data/*.md
-
-# Local archives and benchmark outputs
+/benchmark-results/
 *.zip
 *.7z
 *.tar
 *.gz
-/benchmark-results/
+# Local files
+*.log
+*.tmp
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.temp
+*.swp
+*.swo
+*~
+Desktop.ini
