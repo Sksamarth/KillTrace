@@ -1,9 +1,11 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from app.ingestion_routes import router
+from app.analysis_routes import router as analysis_router
 
-app = FastAPI(title="KillChain AI", version="0.1.0", description="Bounded local security log ingestion. Detection and analysis are future phases.")
+app = FastAPI(title="KillChain AI", version="0.1.0", description="Evidence-linked security log investigation and bounded ingestion.")
 app.include_router(router)
+app.include_router(analysis_router)
 
 
 class HealthResponse(BaseModel):

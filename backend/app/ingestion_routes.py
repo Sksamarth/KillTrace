@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.config import Settings
-from app.job_store import ACTIVE, job_dir, list_jobs, public_job, read_json, reconcile, sources
+from app.job_store import ACTIVE, job_dir, list_jobs, public_job, read_json, reconcile, sources, resolve_source
 from app.jobs import cancel, create_job, launch, prepare_resume
 
 router = APIRouter(prefix="/api/ingestion", tags=["ingestion"])
@@ -15,8 +15,9 @@ class StartJob(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     source: str = Field(min_length=1, max_length=1024)
     source_id: str | None = Field(default=None, min_length=1, max_length=256)
-    source_profile: Literal["simedr-json-1.0.0", "raw-text-1.0.0", "web-combined-1.0.0", "key-value-1.0.0", "json-record-1.0.0", "firex-kv-1.0.0"]
+    source_profile: Literal["auto", "simedr-json-1.0.0", "raw-text-1.0.0", "web-combined-1.0.0", "key-value-1.0.0", "json-record-1.0.0", "firex-kv-1.0.0"]
     synthetic: bool
+    analyze_after: bool = False
 
     @model_validator(mode="after")
     def profile_flags(self):
@@ -54,10 +55,28 @@ def input_sources():
 def start(body: StartJob):
     settings = Settings()
     try:
-        work = create_job(settings, body.source, body.source_id, body.source_profile, body.synthetic)
+        profile,synthetic=body.source_profile,body.synthetic
+        if profile=='auto':
+            from app.source_probe import probe_source
+            result=probe_source(resolve_source(settings,body.source))
+            if not result['source_profile']:
+                raise ValueError(result['message'])
+            if result['synthetic'] and not synthetic:
+                raise ValueError('The detected SimEDR profile requires explicit synthetic-source confirmation')
+            profile=result['source_profile']
+        work = create_job(settings, body.source, body.source_id, profile, synthetic, analyze_after=body.analyze_after)
         launch(work)
         return status(settings, work.name)
     except (OSError, ValueError, RuntimeError) as error:
+        http_error(error)
+
+
+@router.get('/probe')
+def probe(source: str = Query(min_length=1,max_length=1024)):
+    try:
+        from app.source_probe import probe_source
+        return probe_source(resolve_source(Settings(),source))
+    except (OSError,ValueError,RuntimeError) as error:
         http_error(error)
 
 

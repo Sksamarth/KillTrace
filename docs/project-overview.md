@@ -22,7 +22,15 @@ Observed events, inferred correlations, and potential future paths should remain
 
 ## Current repository contents
 
-FastAPI health service, React/TypeScript dashboard shell, a disk-backed DuckDB factory, resource configuration, tests, Docker Compose, and architecture documentation. A user-requested 1 GiB synthetic logfile exists locally under ignored data/, with an inspected source profile, v1 contract, source mappings and schema tests. No real organizer dataset or detection/analysis engine is included.
+The current [investigation extension](investigations.md) adds evidence-based
+rules, ATT&CK hypotheses, candidate-incident correlation and timeline/entity-graph
+views on completed SimEDR/key-value ingestion jobs. Source alerts remain separate.
+Raw/server ingestion and FireX compatibility are implemented. Ground-truth attack
+accuracy, full causal paths, next-target context and larger-tier scaling remain open.
+
+Foundation history: FastAPI health service, React/TypeScript shell, disk-backed
+DuckDB factory, resource configuration, tests, Docker Compose and architecture
+documentation. User-provided/generated logs remain local under ignored data/.
 
 ## Decisions still open
 

@@ -5,3 +5,49 @@ body { margin: 0; min-width: 320px; }
 button { cursor: pointer; }
 button:disabled { opacity: .4; cursor: default; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #2dd4bf; outline-offset: 3px; }
+
+@theme {
+  --color-teal-200: #c1f3c7;
+  --color-teal-300: #8fe89d;
+  --color-teal-400: #74c98a;
+  --color-teal-800: #294d39;
+  --color-teal-950: #10251a;
+}
+:root {font-family: 'Cascadia Code', 'Consolas', ui-monospace, monospace;background:#090d0c;color:#d5dfda;}
+body {background:radial-gradient(ellipse at top left,#111d17 0,transparent 55%),#090d0c;}
+.tool-layout {max-width:1440px;padding:28px 32px 48px;}
+.tool-layout header {border-color:#2b3c33;padding-bottom:20px;}
+.tool-layout h1 {font-size:32px;letter-spacing:-1px;}
+.tool-layout h2 {font-size:18px;font-weight:600;}
+.tool-layout h3 {font-size:15px;font-weight:600;}
+.tool-layout section {border-radius:5px;}
+.tool-layout .bg-slate-900 {background-color:#101813;}
+.tool-layout .bg-slate-950 {background-color:#080f0b;}
+.tool-layout button {border-radius:3px;}
+.tool-layout button:hover:not(:disabled) {filter:brightness(1.15);}
+.tool-layout input,.tool-layout select {border-radius:3px;}
+.scan-console {margin-top:24px;border:1px solid #345240;background:#080f0b;box-shadow:0 12px 36px #0003;}
+.console-title {display:flex;justify-content:space-between;gap:16px;padding:12px 18px;border-bottom:1px solid #294032;background:#142119;color:#a5d6af;font-size:11px;letter-spacing:.12em;}
+.console-title i {display:inline-block;width:7px;height:7px;background:#8fe89d;border-radius:50%;margin-right:10px;}
+.console-body {padding:18px 20px;font-size:12px;line-height:1.9;overflow-wrap:anywhere;}
+.console-command {color:#edf7ed;margin-bottom:12px;}
+.console-command span {color:#8fe89d;margin-right:10px;}
+.console-key {display:inline-block;min-width:62px;color:#779983;font-size:11px;}
+.console-progress {color:#8fe89d;letter-spacing:2px;padding:12px 0;font-size:14px;}
+.console-progress strong {letter-spacing:0;margin-left:12px;}
+.console-note {color:#8b9c92;font-size:11px;line-height:1.6;margin-top:12px;}
+.console-error {color:#ffa59e;}
+.investigation-panel {border-top:2px solid #74c98a;}
+.analysis-progress {margin-top:12px;font-size:12px;color:#a7c5af;}
+.analysis-progress progress {display:block;width:100%;height:8px;margin:8px 0;accent-color:#8fe89d;}
+.analysis-progress small {color:#8b9c92;}
+.graph-workbench {margin:12px 0 24px;border:1px solid #2b4234;background:#080f0b;border-radius:4px;overflow:hidden;}
+.graph-toolbar {display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;background:#142119;color:#adbfaf;font-size:11px;border-bottom:1px solid #2b4234;}
+.graph-toolbar button,.graph-inspector button {border:1px solid #42614c;background:#142119;color:#c8edcf;padding:4px 12px;margin-left:6px;}
+.attack-graph {height:420px;width:100%;background:radial-gradient(#22382a 1px,transparent 1px);background-size:20px 20px;}
+.graph-inspector {padding:12px 16px;border-top:1px solid #2b4234;color:#a8bcae;font-size:11px;overflow-wrap:anywhere;}
+.graph-inspector strong {color:#dce9df;}
+.graph-inspector dl>div {display:flex;gap:12px;margin-top:5px;}
+.graph-inspector dt {min-width:100px;color:#72947c;}
+.graph-workbench>.console-note {padding:0 16px 12px;}
+@media(max-width:700px){.tool-layout{padding:18px 14px;}.console-title{font-size:9px;}.console-body{padding:14px 12px;}.attack-graph{height:320px;}.graph-toolbar{align-items:flex-start;flex-direction:column;}}

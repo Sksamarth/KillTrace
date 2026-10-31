@@ -1,0 +1,16 @@
+- id: repeated-login-failures
+  kind: failed_logins
+  threshold: 10
+  window_seconds: 300
+- id: multiple-destination-ports
+  kind: port_probe
+  threshold: 20
+  window_seconds: 60
+- id: login-success-after-failures
+  kind: login_after_failures
+  threshold: 10
+  window_seconds: 300
+- id: office-spawned-powershell
+  kind: office_script
+  threshold: 1
+  window_seconds: 60

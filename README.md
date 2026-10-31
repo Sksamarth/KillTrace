@@ -1,6 +1,11 @@
 # KillChain AI
 
-A local cybersecurity platform being built in phases. **Chunk 3 delivers bounded ingestion and validation only.** Detection, MITRE ATT&CK mapping, correlation, graphs, predictions and Gemini remain future phases. No security outcome or large-tier benchmark is claimed.
+**Direct scan:** select the original log and click **Start log scan**. Automatic
+recognition chooses the parser, the worker reads the source in bounded batches,
+and detection/graph preparation follows ingestion. No JSON/JSONL conversion is
+required. See [direct log scanning](docs/direct-log-scan.md).
+
+A local cybersecurity investigation platform: bounded ingestion, configurable evidence-based detections, ATT&CK hypotheses, candidate-incident correlation, timelines and entity graphs. Complete causal attack reconstruction, next-target predictions, accuracy qualification and Gemini remain future work.
 
 Stack: Python 3.11+, FastAPI/Pydantic, DuckDB, PyArrow/Parquet; React/TypeScript/Vite/Tailwind. Planned analysis libraries remain reserved dependencies. Designed for a single local worker on an 8 GB CPU-only laptop.
 
@@ -27,6 +32,11 @@ npm run dev
 If the laptop's `npm` resolves to a broken older user installation, use the working Node installation explicitly, for example `& 'C:\Program Files\nodejs\npm.cmd' run dev` in the frontend directory.
 
 Open http://localhost:5173. API docs: http://localhost:8000/docs. In the ingestion page, select a source format and local file, acknowledge authorization and start a job. For `firex-10G.log`, choose **Quoted key=value logs**. The worker runs in a separate local process; the UI shows accepted/rejected counts, validation issues, checkpoints, cancellation and resume.
+
+After ingestion completes, use **Analyze this log job** in the investigation panel,
+then select a candidate incident to view its timeline, evidence relationship graph
+and hash-verified original records. The latest completed ingestion is selected on
+startup. No JSONL export is required. See [investigation workflow, rules and limits](docs/investigations.md).
 
 The default source root is `data/`; override `KILLCHAIN_INGESTION_INPUT_DIR` for another authorized local directory. Input paths are relative to that root. Absolute paths, traversal and resolved paths outside it are rejected. No uploads or network log readers exist. Explicit profiles support raw UTF-8 text, quoted key=value logs (including the supplied FireX file), generic JSON objects, standard combined access logs and existing synthetic SimEDR JSONL. Select the format explicitly; unknown fields are preserved without guessed entity mappings. See docs/raw-log-ingestion.md.
 

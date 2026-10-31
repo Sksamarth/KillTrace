@@ -3,6 +3,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app
+COPY rules ./rules
 RUN useradd --create-home appuser && mkdir /data && chown appuser:appuser /data
 USER appuser
 EXPOSE 8000

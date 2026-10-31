@@ -1,6 +1,6 @@
 # Requirements
 
-**Status:** detection/correlation/explanation requirements below remain planned. Foundation, source-contract and bounded-ingestion tests exist; full-tier analysis benchmarks remain unavailable.
+**Status:** initial evidence-based rules, scoped incident correlation and timeline/entity-graph explanations are implemented; see [current investigation scope](investigations.md). The requirements below remain the broader target. Complete causal attack paths, contextual predictions, ground-truth accuracy and full-tier analysis benchmarks remain unavailable.
 
 ## A. Detect and Label
 

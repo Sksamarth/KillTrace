@@ -2,6 +2,12 @@
 
 ## Revised Windows desktop target
 
+Latest direct-scan request: automatic bounded source recognition, original-file
+ingestion followed by worker-owned analysis, live console and bounded interactive
+Cytoscape graphs are implemented as an initial workflow. Existing raw-text runs
+remain unchanged. This checkpoint does not complete all remaining master-prompt
+requirements. See direct-log-scan.md for validation scope and limitations.
+
 The latest user prompt adds Tauri 2, a packaged Python sidecar, native file
 selection and a Windows installer. The older web-phase checklist below is
 historical evidence, not completion of the new desktop requirements. See
@@ -67,12 +73,11 @@ Previously pushed foundation/data-contract/ingestion work remains intact:
 - Measurement harness/report: `c48464c` (last pushed implementation commit when
   this verification started).
 
-The investigation code developed before the master prompt arrived is preserved
-as an **uncommitted draft**, not claimed as a completed master-prompt phase. Its
-tests/build pass, but the draft combines initial detection and correlation work
-and needs to be reconciled with the newly required separate phase commits. Do not
-delete it or commit it as Phase 1 foundation work. Local synthetic findings are
-not organizer ground truth; no full causal attack reconstruction is established.
+The earlier investigation draft is now integrated into the user-requested direct
+scan workflow. This is initial detection/correlation functionality, not completion
+of all master-prompt Phase 4/5 requirements. Local synthetic findings are not
+organizer ground truth; full causal reconstruction and catalog/rule coverage
+remain unqualified. The current scope is documented in direct-log-scan.md.
 
 - [x] Phase 2: preserve v1/v2; add explicit FireX canonical 2.1.0 definitions,
   published schemas, field mappings, malformed/missing/duplicate tests and actual

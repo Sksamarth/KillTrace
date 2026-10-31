@@ -13,7 +13,8 @@
     "desktop:web": "vite --host 127.0.0.1 --port 1420 --strictPort",
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build --no-bundle",
-    "test:desktop": "node --test tests/desktop.test.mjs"
+    "test:desktop": "node --test tests/desktop.test.mjs",
+    "test": "node --experimental-strip-types --test tests/desktop.test.mjs tests/scanner.test.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.12.4",
@@ -25,6 +26,7 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.0",
     "@tauri-apps/cli": "^2.12.4",
+    "@types/cytoscape": "^3.21.9",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.4.0",

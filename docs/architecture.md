@@ -2,6 +2,14 @@
 
 ## Scope and implemented foundation
 
+Current extension: [evidence-linked investigations](investigations.md) adds a
+separate local analysis worker over completed Parquet, a derived disk-backed
+SQLite observation/incident index, safe YAML rule parameters, bounded NetworkX
+incident slices and investigation APIs/UI. Bulk events remain in Parquet/DuckDB.
+The graph shows associations, not proven causal movement. Earlier Chunk 3 scope
+statements below describe that delivery; complete attack reconstruction,
+contextual reachability and AI remain future work.
+
 The foundation exposed `GET /api/health`, OpenAPI and a React shell; Chunk 3 extends them with local ingestion job APIs and an ingestion interface. Pydantic validates storage resource settings. A tested factory opens an on-disk DuckDB database without creating any application tables. Docker Compose defines loopback-only frontend/backend services and persistent storage. Detection and analysis dependencies are installed but unused. Chunk 2 adds a versioned source-specific contract derived from an inspected synthetic SimEDR JSONL file; no undisclosed source schema is assumed.
 
 ## Proposed processing architecture

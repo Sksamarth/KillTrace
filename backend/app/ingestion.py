@@ -307,5 +307,8 @@ if __name__ == "__main__":
         settings = Settings(_env_file=".env")
         work = prepare_resume(settings, args.resume) if args.resume else create_job(settings, args.source, source_profile=args.profile, synthetic=args.synthetic or args.profile == "simedr-json-1.0.0")
         result = run_job(work)
+    if result['status']=='completed' and result.get('analysis_requested'):
+        from app.analysis import analyze
+        analyze(args.job_dir.resolve() if args.job_dir else work)
     print(json.dumps({key: value for key, value in result.items() if key not in {"settings", "source_path"}}, indent=2))
     raise SystemExit(0 if result["status"] == "completed" else 1)
