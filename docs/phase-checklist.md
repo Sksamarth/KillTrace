@@ -4,7 +4,7 @@ Updated 31 October 2026 after receiving the seven-phase master prompt.
 This checklist distinguishes historical deliveries from completion under the new
 gates. No seven-phase completion is claimed.
 
-## Phase 1 — verification in progress, blocked on Docker
+## Phase 1 — verification complete
 
 - [x] Read architecture, problem statement, project overview, requirements and roadmap.
 - [x] Inspect backend/frontend, APIs, dependencies, storage/configuration and Compose.
@@ -16,21 +16,30 @@ gates. No seven-phase completion is claimed.
 - [x] Tests exercise disk-backed DuckDB settings/persistence and invalid resource configuration.
 - [x] `pip check`: no broken requirements.
 - [x] Inspect Git: existing `origin` repository, branch `main`; no history rewrite or forced push.
-- [ ] Docker Compose service startup: **blocked**. No `docker` command is available,
-  and Docker Desktop/CLI are absent from their standard installation locations.
-- [ ] Complete Phase 1 and verify its completion commit remotely before advancing.
+- [x] Docker Desktop installed and the official hello-world container passed.
+- [x] Compose images built and both services reached healthy state.
+- [x] Backend health and frontend API proxy return `ok`; frontend and API docs return HTTP 200.
+- [x] DuckDB connection and dependency checks inside the Linux backend container.
 
-Additional environment constraint: the system C: drive had approximately 144 MiB
-free during verification. E: had approximately 70 GiB free. Tests used a fresh
+Docker Desktop 4.97.0, Engine 29.9.2 and Compose v5.6.1 use WSL 2.
+Virtual disks were verified under `E:\DockerData`. The isolated verification
+project is `killchain-foundation-check`, using loopback backend port 18000 and
+frontend port 18080 to preserve existing local development servers. Generated
+Compose configuration and installer artifacts remain ignored under data/.
+An initial startup command timed out before the engine became ready; after a
+later engine stop, Desktop was restarted and both services passed fresh HTTP
+checks. This verifies startup, not long-running reliability or dataset scale.
+
+The restricted environment initially reported approximately 144 MiB free on C:.
+An unrestricted host check showed approximately 119 GiB free; the earlier reading
+must not be treated as the host disk capacity. E: had approximately 70 GiB free. Tests used a fresh
 ignored `data/` test directory on E: after the system temporary directory failed
-the configured free-space reserve. No existing files were deleted. Docker's image,
-WSL and temporary storage placement needs available disk space; do not blindly
-install it onto the nearly full system drive.
+the configured free-space reserve. No existing files were deleted. Docker's WSL
+and image storage was explicitly placed on E: during per-user installation.
 
-The master prompt requires Compose startup verification and says to stop at
-missing dependencies. Resume after Docker Engine/Compose is available and running,
-or after an explicit user revision permitting local-only Phase 1 with Docker
-verification deferred. Static Compose inspection is not a successful runtime test.
+The Docker dependency gate is resolved by actual runtime verification. The Phase 1
+verification report is committed/pushed separately from the preserved analysis
+draft before the Phase 2 contract audit begins.
 
 ## Preserved work and subsequent gates
 
